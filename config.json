@@ -1,0 +1,13 @@
+{
+  "ServerIPAddress": "192.168.128.3",
+  "SourcePortNumberUDP": 9876,
+  "DestinationPortNumberUDP": 8765,
+  "DestinationPortNumberTCPHeadSYN": 9999,
+  "DestinationPortNumberTCPTailSYN": 8888,
+  "PortNumberTCP_PreProbingPhases": 7777,
+  "PortNumberTCP_PostProbingPhases": 6666,
+  "SizeOfUDPPayloadInBytes": 1000,
+  "InterMeasurementTimeInSeconds": 15,
+  "NumberOfUDPPacketsInPacketTrain": 6000,
+  "TTLForUDPPackets": 255
+}
