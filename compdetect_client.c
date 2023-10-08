@@ -20,7 +20,7 @@ int main() {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = inet_addr("SERVER_IP");
+    server_addr.sin_addr.s_addr = inet_addr("192.168.128.3");
 
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("Connection failed");
@@ -28,7 +28,7 @@ int main() {
     }
 
     // Communication code goes here...
-
+	print("\nconnection successful. Closing socket\n")
     close(sockfd);
     return 0;
 }
