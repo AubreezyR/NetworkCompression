@@ -4,90 +4,122 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
-#define PORT 8080  // Port number for the server to listen on
-#define MAX_JSON_SIZE 4096
-int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t addr_len = sizeof(client_addr);
-    char buffer[1024];
+#define SERVER_TCP_PORT 8080   // TCP port to receive JSON data
+#define SERVER_UDP_PORT 8081   // UDP port to receive UDP packets
 
-    // Create a socket
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == -1) {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
+void receive_json_over_tcp(int tcp_sockfd) {
+    // Receive and process JSON data (code for JSON reception goes here)
+    // For simplicity, let's assume JSON data is received as a string.
+    char json_buffer[4096];
+    ssize_t bytesRead;
+
+    while ((bytesRead = recv(tcp_sockfd, json_buffer, sizeof(json_buffer), 0)) > 0) {
+        // Process JSON data (json_buffer)
+        // You can save it to a file, parse it, etc.
     }
+}
 
-    // Initialize server address structure
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP
-    server_addr.sin_port = htons(PORT);
+void receive_udp_packets(int udp_sockfd) {
+    char udp_buffer[64]; // Buffer to receive UDP packets
+    struct sockaddr_in udp_client_addr;
+    socklen_t udp_addr_len = sizeof(udp_client_addr);
 
-    // Bind the socket to the specified port
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Bind failed");
-        exit(EXIT_FAILURE);
-    }
+    printf("Server is listening on UDP port %d...\n", SERVER_UDP_PORT);
 
-    // Listen for incoming connections
-    if (listen(server_fd, 5) == -1) { // The second argument is the maximum queue length for pending connections
-        perror("Listen failed");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Server listening on port %d...\n", PORT);
-
-    // Accept incoming connections
-    new_socket = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
-    if (new_socket == -1) {
-        perror("Accept failed");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Connection accepted from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-
-    //communicate with the client through the "new_socket" descriptor
     while (1) {
-            // Receive UDP packet from a client
-            ssize_t bytesReceived = recvfrom(server_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client_addr, &addr_len);
-            if (bytesReceived < 0) {
-                perror("Receive failed");
-                continue; // Continue listening for other packets
-            }
-    
-            buffer[bytesReceived] = '\0'; // Null-terminate the received data
-    
-            // Process the received packet
-            printf("Received packet from %s:%d:\n%s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+        // Receive UDP packets
+        ssize_t udpBytesReceived = recvfrom(udp_sockfd, udp_buffer, sizeof(udp_buffer), 0, (struct sockaddr *)&udp_client_addr, &udp_addr_len);
+        if (udpBytesReceived < 0) {
+            perror("UDP receive failed");
+            continue; // Continue listening for other UDP packets
         }
-  	// Receive the JSON data from the client
-    char json_buffer[MAX_JSON_SIZE];
-    ssize_t bytesRead = recv(new_socket, json_buffer, sizeof(json_buffer), 0);
 
-    if (bytesRead == -1) {
-        perror("Error receiving JSON data from client");
-        close(new_socket);
-        return EXIT_FAILURE;
+        udp_buffer[udpBytesReceived] = '\0'; // Null-terminate the received data
+
+        // Process the received UDP packet
+        printf("Received UDP packet from %s:%d:\n%s\n", inet_ntoa(udp_client_addr.sin_addr), ntohs(udp_client_addr.sin_port), udp_buffer);
+    }
+}
+
+int main() {
+    int tcp_sockfd, udp_sockfd;
+    struct sockaddr_in tcp_server_addr, udp_server_addr;
+    socklen_t tcp_addr_len = sizeof(tcp_server_addr);
+    socklen_t udp_addr_len = sizeof(udp_server_addr);
+
+    // Create a TCP socket
+    tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcp_sockfd < 0) {
+        perror("TCP socket creation failed");
+        exit(EXIT_FAILURE);
     }
 
-    // Write the received JSON data to a file FOR TESTING
-    FILE *json_file = fopen("received_data.json", "w");
-    if (json_file == NULL) {
-        perror("Error opening file for writing");
-        close(new_socket);
-        return EXIT_FAILURE;
+    memset(&tcp_server_addr, 0, sizeof(tcp_server_addr));
+
+    tcp_server_addr.sin_family = AF_INET;
+    tcp_server_addr.sin_port = htons(SERVER_TCP_PORT);
+    tcp_server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // Bind the TCP socket to the server's address
+    if (bind(tcp_sockfd, (struct sockaddr *)&tcp_server_addr, sizeof(tcp_server_addr)) == -1) {
+        perror("TCP bind failed");
+        close(tcp_sockfd);
+        exit(EXIT_FAILURE);
     }
 
-    size_t 	bytesWritten = fwrite(json_buffer, 1, bytesRead, json_file);
-    fclose(json_file);
+    // Listen for incoming TCP connections
+    if (listen(tcp_sockfd, 5) == -1) {
+        perror("TCP listen failed");
+        close(tcp_sockfd);
+        exit(EXIT_FAILURE);
+    }
 
-    printf("Received JSON data and saved it to received_data.json\n");
+    printf("Server is listening on TCP port %d...\n", SERVER_TCP_PORT);
 
-    close(new_socket); // Close the connection
-    close(server_fd);  // Close the server socket
+    // Accept a TCP connection
+    int client_tcp_sockfd = accept(tcp_sockfd, (struct sockaddr *)&tcp_server_addr, &tcp_addr_len);
+    if (client_tcp_sockfd < 0) {
+        perror("TCP accept failed");
+        close(tcp_sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a UDP socket for receiving UDP packets
+    udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_sockfd < 0) {
+        perror("UDP socket creation failed");
+        close(client_tcp_sockfd);
+        close(tcp_sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    memset(&udp_server_addr, 0, sizeof(udp_server_addr));
+
+    udp_server_addr.sin_family = AF_INET;
+    udp_server_addr.sin_port = htons(SERVER_UDP_PORT);
+    udp_server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // Bind the UDP socket to the server's address
+    if (bind(udp_sockfd, (struct sockaddr *)&udp_server_addr, sizeof(udp_server_addr)) == -1) {
+        perror("UDP bind failed");
+        close(udp_sockfd);
+        close(client_tcp_sockfd);
+        close(tcp_sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    // Call functions to receive JSON and UDP packets
+    receive_json_over_tcp(client_tcp_sockfd);
+    receive_udp_packets(udp_sockfd);
+
+    // Close the UDP socket
+    close(udp_sockfd);
+
+    // Close the TCP sockets
+    close(client_tcp_sockfd);
+    close(tcp_sockfd);
 
     return 0;
 }
