@@ -11,6 +11,7 @@ int main() {
     int server_fd, new_socket;
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
+    char buffer[1024];
 
     // Create a socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -48,7 +49,20 @@ int main() {
 
     printf("Connection accepted from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-    // You can now communicate with the client through the "new_socket" descriptor
+    //communicate with the client through the "new_socket" descriptor
+    while (1) {
+            // Receive UDP packet from a client
+            ssize_t bytesReceived = recvfrom(server_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client_addr, &addr_len);
+            if (bytesReceived < 0) {
+                perror("Receive failed");
+                continue; // Continue listening for other packets
+            }
+    
+            buffer[bytesReceived] = '\0'; // Null-terminate the received data
+    
+            // Process the received packet
+            printf("Received packet from %s:%d:\n%s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+        }
   	// Receive the JSON data from the client
     char json_buffer[MAX_JSON_SIZE];
     ssize_t bytesRead = recv(new_socket, json_buffer, sizeof(json_buffer), 0);
@@ -59,7 +73,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    // Write the received JSON data to a file
+    // Write the received JSON data to a file FOR TESTING
     FILE *json_file = fopen("received_data.json", "w");
     if (json_file == NULL) {
         perror("Error opening file for writing");
@@ -67,7 +81,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    size_t bytesWritten = fwrite(json_buffer, 1, bytesRead, json_file);
+    size_t 	bytesWritten = fwrite(json_buffer, 1, bytesRead, json_file);
     fclose(json_file);
 
     printf("Received JSON data and saved it to received_data.json\n");
