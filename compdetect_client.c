@@ -8,7 +8,7 @@
 
 #define SERVER_IP "192.168.128.3" 
 #define SERVER_TCP_PORT 8080     
-#define SERVER_UDP_PORT 9876     
+#define SERVER_UDP_PORT 8765     
 
 void send_json_over_tcp(char* jsonFile) {
     int sockfd;
@@ -69,6 +69,12 @@ void send_udp_packets() {
     server_addr.sin_port = htons(SERVER_UDP_PORT);
     server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
 
+	//Set the DOnt Fragment flag in IP header
+	int enable = 1;
+    if (setsockopt(sockfd, IPPROTO_IP, IP_DONTFRAG, &enable, sizeof(enable)) < 0) {
+        perror("Failed to set DF flag");
+        exit(EXIT_FAILURE);
+    }
     // Send UDP packets (low entropy data)
     for (int i = 0; i < 5; i++) {
         char packet[64];
@@ -82,7 +88,10 @@ void send_udp_packets() {
 }
 
 int main(int argc, char *argv[]) {
-	
+	if(argc != 2){
+		printf("Error: Incorrect number of arguments");
+		return EXIT_FAILURE;
+	}
     send_json_over_tcp(argv[1]);
     send_udp_packets();
     return 0;
