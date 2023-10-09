@@ -6,12 +6,11 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#define SERVER_IP "192.168.128.3"  // Change to the server's IP address
-#define SERVER_TCP_PORT 8080     // Change to the server's TCP port number
-#define SERVER_UDP_PORT 9876     // Change to the server's UDP port number
-#define JSON_FILE "data.json"    // JSON file to send
+#define SERVER_IP "192.168.128.3" 
+#define SERVER_TCP_PORT 8080     
+#define SERVER_UDP_PORT 9876     
 
-void send_json_over_tcp() {
+void send_json_over_tcp(char* jsonFile) {
     int sockfd;
     struct sockaddr_in server_addr;
 
@@ -36,7 +35,7 @@ void send_json_over_tcp() {
     }
 
     // Read and send the JSON file over TCP
-    FILE *json_file = fopen(JSON_FILE, "r");
+    FILE *json_file = fopen(jsonFile, "r");
     if (json_file == NULL) {
         perror("Error opening JSON file");
         close(sockfd);
@@ -82,8 +81,9 @@ void send_udp_packets() {
     close(sockfd);
 }
 
-int main() {
-    send_json_over_tcp();
+int main(int argc, char *argv[]) {
+	
+    send_json_over_tcp(argv[1]);
     send_udp_packets();
     return 0;
 }
