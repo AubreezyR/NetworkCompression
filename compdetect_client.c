@@ -6,9 +6,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#define SERVER_IP "127.0.0.1"   // Change to the server's IP address
+#define SERVER_IP "192.168.128.3"  // Change to the server's IP address
 #define SERVER_TCP_PORT 8080     // Change to the server's TCP port number
-#define SERVER_UDP_PORT 8081     // Change to the server's UDP port number
+#define SERVER_UDP_PORT 9876     // Change to the server's UDP port number
 #define JSON_FILE "data.json"    // JSON file to send
 
 void send_json_over_tcp() {

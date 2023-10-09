@@ -7,17 +7,27 @@
 #include <sys/types.h>
 
 #define SERVER_TCP_PORT 8080   // TCP port to receive JSON data
-#define SERVER_UDP_PORT 8081   // UDP port to receive UDP packets
+#define SERVER_UDP_PORT 9876   // UDP port to receive UDP packets
 
 void receive_json_over_tcp(int tcp_sockfd) {
     // Receive and process JSON data (code for JSON reception goes here)
     // For simplicity, let's assume JSON data is received as a string.
     char json_buffer[4096];
     ssize_t bytesRead;
-
+    
     while ((bytesRead = recv(tcp_sockfd, json_buffer, sizeof(json_buffer), 0)) > 0) {
         // Process JSON data (json_buffer)
-        // You can save it to a file, parse it, etc.
+        // Write the received JSON data to a file
+        FILE *json_file = fopen("received_data.json", "w");
+        if (json_file == NULL) {
+            perror("Error opening file for writing");
+         
+        }
+    
+        size_t bytesWritten = fwrite(json_buffer, 1, bytesRead, json_file);
+        fclose(json_file);
+    
+        printf("Received JSON data and saved it to received_data.json\n");
     }
 }
 
