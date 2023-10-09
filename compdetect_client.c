@@ -9,13 +9,17 @@
 
 #define PORT 8080
 
-int main() {
+int main(int argc, char *argv[]) {
+	if(argc !=2 ){
+		printf("Error: Incorrect amount of args");
+	}
+	printf(argv[1]);
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("Socket creation failed");
         exit(EXIT_FAILURE);
     }
-
+	FILE *fp 
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
