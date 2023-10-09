@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     // Communication code goes here...
 	// Read the JSON file into a buffer
     char json_buffer[MAX_JSON_SIZE];
-    FILE *json_file = fopen("data.json", "r");
+    FILE *json_file = fopen(argv[1], "r");
     if (json_file == NULL) {
         perror("Error opening JSON file");
         return EXIT_FAILURE;
