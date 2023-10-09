@@ -7,7 +7,7 @@
 #include <sys/types.h>
 
 #define SERVER_TCP_PORT 8080   // TCP port to receive JSON data
-#define SERVER_UDP_PORT 9876   // UDP port to receive UDP packets
+#define SERVER_UDP_PORT 8765   // UDP port to receive UDP packets
 
 void receive_json_over_tcp(int tcp_sockfd) {
     // Receive and process JSON data (code for JSON reception goes here)
