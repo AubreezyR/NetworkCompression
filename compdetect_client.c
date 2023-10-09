@@ -8,27 +8,14 @@
 
 
 #define PORT 8080
+#define MAX_JSON_SIZE 4096
 
 int main(int argc, char *argv[]) {
 	if(argc !=2 ){
 		printf("Error: Incorrect amount of args");
 	}
 
-	// Open the JSON file for reading
-    FILE *file = fopen(argv[1], "r");
-    if (!file) {
-        fprintf(stderr, "Unable to open the JSON file\n");
-        return 1;
-    }
-
-    // Read and print the JSON file contents
-    int c;
-    while ((c = fgetc(file)) != EOF) {
-        putchar(c);
-    }
-
-    // Close the file
-    fclose(file);
+	
 	
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
@@ -48,6 +35,27 @@ int main(int argc, char *argv[]) {
     }
 
     // Communication code goes here...
+	// Read the JSON file into a buffer
+    char json_buffer[MAX_JSON_SIZE];
+    FILE *json_file = fopen("data.json", "r");
+    if (json_file == NULL) {
+        perror("Error opening JSON file");
+        return EXIT_FAILURE;
+    }
+
+    size_t bytesRead = fread(json_buffer, 1, sizeof(json_buffer), json_file);
+    fclose(json_file);
+
+    // Send the JSON data to the server
+    ssize_t bytesSent = send(sockfd, json_buffer, bytesRead, 0);
+    if (bytesSent == -1) {
+        perror("Error sending JSON data to server");
+        close(sockfd);
+        return EXIT_FAILURE;
+    }
+	
+
+    
 	printf("\nconnection successful. Closing socket\n");
     close(sockfd);
     return 0;
