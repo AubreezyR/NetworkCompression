@@ -8,7 +8,8 @@
 
 #define SERVER_IP "192.168.128.3" 
 #define SERVER_TCP_PORT 8080     
-#define SERVER_UDP_PORT 8765     
+#define SERVER_UDP_PORT 8765  
+#define SOURCE_PORT_UDP 9876   
 
 void send_json_over_tcp(char* jsonFile) {
     int sockfd;
@@ -63,19 +64,24 @@ void send_udp_packets() {
         exit(EXIT_FAILURE);
     }
     
-	//set server addr info
-    memset(&server_addr, 0, sizeof(server_addr));
-
+	memset(&server_addr, 0, sizeof(server_addr));
+    
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_UDP_PORT);
     server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
 
-	//set client addr info
+    // Set the source port for UDP
     memset(&client_addr, 0, sizeof(client_addr));
-    
     client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(9876);
-    client_addr.sin_addr.s_addr = INADDR_ANY;
+    client_addr.sin_port = htons(SOURCE_PORT_UDP); // Set the desired source UDP port
+    client_addr.sin_addr.s_addr = INADDR_ANY;       // Let the system choose the source IP
+
+    // Bind the socket to the specified source port for UDP
+    if (bind(sockfd, (struct sockaddr *)&client_addr, sizeof(client_addr)) < 0) {
+        perror("Binding source port for UDP failed");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
 
 	//Set the DOnt Fragment flag in IP header
 	int enable = 1;
@@ -84,12 +90,6 @@ void send_udp_packets() {
         exit(EXIT_FAILURE);
     }
 
-	if(bind(sockfd, (struct sockaddr *)&client_addr, sizeof(client_addr))<0){
-		printf("Binding source port failed");
-		close(sockfd);
-		exit(EXIT_FAILURE);
-	}
-    
     // Send UDP packets (low entropy data)
     for (int i = 0; i < 5; i++) {
         char packet[64];
