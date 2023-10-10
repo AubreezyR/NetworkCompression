@@ -68,9 +68,7 @@ void receive_udp_packets() {
             continue; // Skip processing on error
         }
 
-        // Process the received packet (you can add custom logic here)
-        // For this example, we simply print the received data
-        printf("Received UDP packet %d: %.*s\n", i, (int)bytes_received, packet);
+        printf("Received UDP packet %d", i);
     }
 
     close(sockfd);

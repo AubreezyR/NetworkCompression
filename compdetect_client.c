@@ -149,6 +149,6 @@ int main(int argc, char *argv[]) {
         printf("No compression was detected.\n");
     }
 
-	send_json_over_tcp(argv[1]);
+	//send_json_over_tcp(argv[1]);
     return 0;
 }
