@@ -54,7 +54,7 @@ void send_json_over_tcp(char* jsonFile) {
 
 void send_udp_packets() {
     int sockfd;
-    struct sockaddr_in server_addr;
+    struct sockaddr_in server_addr , client_addr;
 
     // Create a UDP socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -62,19 +62,34 @@ void send_udp_packets() {
         perror("UDP socket creation failed");
         exit(EXIT_FAILURE);
     }
-
+    
+	//set server addr info
     memset(&server_addr, 0, sizeof(server_addr));
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_UDP_PORT);
     server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
 
+	//set client addr info
+    memset(&client_addr, 0, sizeof(client_addr));
+    
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(9876);
+    client_addr.sin_addr.s_addr = INADDR_ANY;
+
 	//Set the DOnt Fragment flag in IP header
 	int enable = 1;
-    if (setsockopt(sockfd, IPPROTO_IP, IP_PMTUDISC_DO, &enable, sizeof(enable)) < 0) {
+    if (setsockopt(sockfd, IPPROTO_IP, IP_MTU_DISCOVER, &enable, sizeof(enable)) < 0) {
         perror("Failed to set DF flag");
         exit(EXIT_FAILURE);
     }
+
+	if(bind(sockfd, (struct sockaddr *)&client_addr, sizeof(client_addr))<0){
+		printf("Binding source port failed");
+		close(sockfd);
+		exit(EXIT_FAILURE);
+	}
+    
     // Send UDP packets (low entropy data)
     for (int i = 0; i < 5; i++) {
         char packet[64];
