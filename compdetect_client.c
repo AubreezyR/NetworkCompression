@@ -5,11 +5,16 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-
+#include <time.h>
+//later this info comes from config file
 #define SERVER_IP "192.168.128.3" 
 #define SERVER_TCP_PORT 8080     
 #define SERVER_UDP_PORT 8765  
-#define SOURCE_PORT_UDP 9876   
+#define SOURCE_PORT_UDP 9876
+#define PACKET_SIZE 1400     
+#define PACKET_COUNT 10      
+#define THRESHOLD 100        
+   
 
 void send_json_over_tcp(char* jsonFile) {
     int sockfd;
@@ -53,10 +58,11 @@ void send_json_over_tcp(char* jsonFile) {
     close(sockfd);
 }
 
-void send_udp_packets() {
+void send_udp_packets(int payload_type) {
     int sockfd;
     struct sockaddr_in server_addr , client_addr;
-
+	char packet[PACKET_SIZE];
+	
     // Create a UDP socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
@@ -72,6 +78,7 @@ void send_udp_packets() {
 
     // Set the source port for UDP
     memset(&client_addr, 0, sizeof(client_addr));
+    
     client_addr.sin_family = AF_INET;
     client_addr.sin_port = htons(SOURCE_PORT_UDP); // Set the desired source UDP port
     client_addr.sin_addr.s_addr = INADDR_ANY;       // Let the system choose the source IP
@@ -91,23 +98,57 @@ void send_udp_packets() {
     }
 
     // Send UDP packets (low entropy data)
-    for (int i = 0; i < 5; i++) {
-        char packet[64];
-        snprintf(packet, sizeof(packet), "Low Entropy Packet %d", i + 1);
-        sendto(sockfd, packet, strlen(packet), 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
-        printf("Sent UDP: %s\n", packet);
-        usleep(100000); // Sleep for 100 milliseconds between packets
+    for (int i = 0; i < PACKET_COUNT; i++) {
+    	memset(packet, 0, sizeof(packet)); // Initialize packet with all 0's
+    	
+    	if(payload_type == 1){
+		    //Fill packet wil random data
+		    FILE *urandom = fopen("/dev/urandom", "rb");
+		    fread(packet, 1, sizeof(packet), urandom);
+		    fclose(urandom);
+	    }
+	    sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	    usleep(100000); // Sleep for 100 milliseconds between packets
     }
 
     close(sockfd);
 }
 
 int main(int argc, char *argv[]) {
+	struct timespec start, end;
+	long time_diff;
+
+	//error check
 	if(argc != 2){
 		printf("Error: Incorrect number of arguments");
 		return EXIT_FAILURE;
 	}
-    send_json_over_tcp(argv[1]);
-    send_udp_packets();
+
+	// Measure the time taken to send the first packet train
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    send_udp_packets(0); // Send packets with all 0's as payload
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+	time_diff = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
+	if (time_diff > THRESHOLD) {
+		printf("Compression detected!\n");
+	} else {
+		printf("No compression was detected.\n");
+	}
+	
+    // Measure the time taken to send the second packet train with random data
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    send_udp_packets(1); // Send packets with random data
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    time_diff = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
+
+    if (time_diff > THRESHOLD) {
+        printf("Compression detected!\n");
+    } else {
+        printf("No compression was detected.\n");
+    }
+
+	send_json_over_tcp(argv[1]);
     return 0;
 }
