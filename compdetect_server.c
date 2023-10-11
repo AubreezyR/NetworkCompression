@@ -112,7 +112,6 @@ void receive_udp_packets(int* compression_detected, unsigned short server_port) 
 
 	//calc time diff 
 	long delta_time = (end.tv_sec - start.tv_sec)* 1000; //convert to milli seconds for readablility use .tv_sec so we can preform subtraction
-
 	// Simulate compression detection logic (you can customize this logic)
     if (delta_time > THRESHOLD) {
         *compression_detected = 1; // Compression detected
