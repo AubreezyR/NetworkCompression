@@ -123,7 +123,8 @@ int main(int argc, char *argv[]) {
 		printf("Error: Incorrect number of arguments");
 		return EXIT_FAILURE;
 	}
-
+	//TCP and JSON
+		send_json_over_tcp(argv[1]);
 	// Measure the time taken to send the first packet train
     clock_gettime(CLOCK_MONOTONIC, &start);
     send_udp_packets(0); // Send packets with all 0's as payload
@@ -149,6 +150,6 @@ int main(int argc, char *argv[]) {
         printf("No compression was detected.\n");
     }
 
-	//send_json_over_tcp(argv[1]);
+	
     return 0;
 }
