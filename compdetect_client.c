@@ -18,7 +18,6 @@
 
 void send_json_data(char* jsonFile) {
     // Open the JSON file for reading
-    printf("sending json");
     FILE *config_file = fopen(jsonFile, "r");
     if (!config_file) {
         perror("Failed to open config.json");
@@ -101,22 +100,27 @@ int main(int argc, char*argv[]) {
 		perror("Wrong number of args");
 	}
     // Send JSON data to the server
+    printf("sending json");
     send_json_data(argv[1]);
 
     // Sleep for inter-measurement time
+    printf("sleeping");
     sleep(INTER_MEASUREMENT_TIME);
 
     // Send UDP packets with low entropy data
+    printf("sending low entropy");
     send_udp_packets(LOW_ENTROPY_PACKET_COUNT);
 
     // Sleep for inter-measurement time
+    printf("sleeping");
     sleep(INTER_MEASUREMENT_TIME);
 
     // Send UDP packets with high entropy data
+    printf("sending high entropy");
     send_udp_packets(HIGH_ENTROPY_PACKET_COUNT);
 
     // Receive compression detection result from the server
-    printf("recieving udp");
+    printf("setting up tcp to recieve results");
     int compression_detected;
     int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_tcp_addr;
@@ -124,13 +128,15 @@ int main(int argc, char*argv[]) {
     server_tcp_addr.sin_family = AF_INET;
     server_tcp_addr.sin_port = htons(SERVER_TCP_PORT);
     server_tcp_addr.sin_addr.s_addr =inet_addr(SERVER_IP);
-    
+
+    printf("connecting to server");
     if (connect(tcp_socket, (struct sockaddr *)&server_tcp_addr, sizeof(server_tcp_addr)) < 0) {
         perror("TCP connection failed");
         close(tcp_socket);
         return 1;
     }
 
+	printf("reciving");
     recv(tcp_socket, &compression_detected, sizeof(compression_detected), 0);
     close(tcp_socket);
 

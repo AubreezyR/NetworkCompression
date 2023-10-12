@@ -167,11 +167,17 @@ int main(int argc, char *argv[]) {
 	//convert argv[1] which is the port number to an unsigned short
 	unsigned short server_port = (unsigned short)atoi(argv[1]);
     // Call functions to receive JSON and UDP packets
+    printf("reciving json");
     receive_json_over_tcp(server_port);
+    printf("json recived");
     int* compression_detected = 0;
+    printf("getting udp packers");
     receive_udp_packets(compression_detected, server_port);
+    printf("udp packets got");
     //compression_detected is now either 1 or 0 now we send this to the client
+    printf("sending results");
     send_compression_results(compression_detected);
+    printf("results send");
 
     return 0;
 }
