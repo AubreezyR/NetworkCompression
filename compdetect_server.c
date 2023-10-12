@@ -8,8 +8,8 @@
 #include <time.h>
 #include "cJSON.h"
 
-#define SERVER_TCP_PORT 8080   // TCP port to receive JSON data
-#define SERVER_UDP_PORT 8765   // UDP port to receive UDP packets
+#define SERVER_TCP_PORT 7777   
+#define SERVER_UDP_PORT 8765
 #define CLIENT_TCP_PORT 8080
 #define PACKET_SIZE 1400     
 #define PACKET_COUNT 10      
