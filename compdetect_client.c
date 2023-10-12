@@ -18,6 +18,7 @@
 
 void send_json_data(char* jsonFile) {
     // Open the JSON file for reading
+    printf("sending json");
     FILE *config_file = fopen(jsonFile, "r");
     if (!config_file) {
         perror("Failed to open config.json");
@@ -69,6 +70,7 @@ void send_json_data(char* jsonFile) {
 }
 
 void send_udp_packets(int entropy) {
+	printf("sending udp");
     // Create a UDP socket
     int udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (udp_socket < 0) {
@@ -114,6 +116,7 @@ int main(int argc, char*argv[]) {
     send_udp_packets(HIGH_ENTROPY_PACKET_COUNT);
 
     // Receive compression detection result from the server
+    printf("recieving udp");
     int compression_detected;
     int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_tcp_addr;

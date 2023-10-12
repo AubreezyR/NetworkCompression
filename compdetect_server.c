@@ -58,11 +58,10 @@ void receive_json_over_tcp(unsigned short  server_port) {
 		return;
 	}	
     // convert the json buffer to a dictionary
-	json_buffer[json_bytes_recieved] = '\0';
-	cJSON* root = cJSON_Parse(json_buffer);
+	//json_buffer[json_bytes_recieved] = '\0';
+	//cJSON* root = cJSON_Parse(json_buffer);
     //create variables based on the dictionary
-    char *json_string = cJSON_Print(root);
-    printf("JSON DATA: \n%s\n", json_string);
+    //char *json_string = cJSON_Print(root);
 	
 }
 
