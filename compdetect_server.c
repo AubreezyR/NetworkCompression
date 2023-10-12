@@ -107,11 +107,12 @@ void receive_udp_packets(int* compression_detected, unsigned short server_port) 
 
         printf("Received UDP packet %d", i);
     }
-	//clac end time
+	//calc end time
 	clock_gettime(CLOCK_MONOTONIC, &end);
 
 	//calc time diff 
 	long delta_time = (end.tv_sec - start.tv_sec)* 1000; //convert to milli seconds for readablility use .tv_sec so we can preform subtraction
+	printf("delta time is: %ld\n", delta_time);
 	// Simulate compression detection logic (you can customize this logic)
     if (delta_time > THRESHOLD) {
         *compression_detected = 1; // Compression detected
@@ -124,7 +125,7 @@ void receive_udp_packets(int* compression_detected, unsigned short server_port) 
     close(sockfd);
 }
 
-int send_compression_results(int compression_detected){
+int send_compression_results(int* compression_detected){
 	// Establish a new TCP connection for sending findings to the client
     int new_tcp_socket;
     struct sockaddr_in client_tcp_addr_new;
@@ -171,6 +172,7 @@ int main(int argc, char *argv[]) {
     int* compression_detected = 0;
     receive_udp_packets(compression_detected, server_port);
     //compression_detected is now either 1 or 0 now we send this to the client
-     
+    send_compression_results(compression_detected);
+
     return 0;
 }
