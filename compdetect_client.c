@@ -8,8 +8,8 @@
 #include <sys/types.h>
 #include "cJSON.h"
 
-#define SERVER_IP "SERVER_IP_ADDRESS"
-#define SERVER_TCP_PORT 12345
+#define SERVER_IP "192.168.128.3"
+#define SERVER_TCP_PORT 8080
 #define SERVER_UDP_PORT 8765
 #define LOW_ENTROPY_PACKET_COUNT 10
 #define HIGH_ENTROPY_PACKET_COUNT 10
@@ -29,7 +29,7 @@ void send_json_data() {
     memset(&server_tcp_addr, 0, sizeof(server_tcp_addr));
     server_tcp_addr.sin_family = AF_INET;
     server_tcp_addr.sin_port = htons(SERVER_TCP_PORT);
-    server_tcp_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    server_tcp_addr.sin_addr.s_addr =inet_addr(SERVER_IP);
 
     // Connect to the server over TCP
     if (connect(tcp_socket, (struct sockaddr *)&server_tcp_addr, sizeof(server_tcp_addr)) < 0) {
@@ -66,7 +66,6 @@ void send_udp_packets(int entropy) {
     memset(&server_udp_addr, 0, sizeof(server_udp_addr));
     server_udp_addr.sin_family = AF_INET;
     server_udp_addr.sin_port = htons(SERVER_UDP_PORT);
-    server_udp_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
 
     // Generate and send UDP packets
     for (int i = 0; i < entropy; i++) {
