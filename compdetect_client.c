@@ -3,133 +3,153 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "cJSON.h"
+#include <time.h>
+//later this info comes from config file
+#define SERVER_IP "192.168.128.3" 
+#define SERVER_TCP_PORT 8080     
+#define SERVER_UDP_PORT 8765  
+#define SOURCE_PORT_UDP 9876
+#define PACKET_SIZE 1400     
+#define PACKET_COUNT 10      
+#define THRESHOLD 100        
+   
 
-#define SERVER_IP "192.168.128.3"
-#define SERVER_TCP_PORT 12345
-#define SOURCE_UDP_PORT 9876
-#define DEST_UDP_PORT 8765
-#define DEST_TCP_HEAD_SYN_PORT 9999
-#define DEST_TCP_TAIL_SYN_PORT 8888
-#define PORT_TCP_PRE_PROBING 7777
-#define PORT_TCP_POST_PROBING 6666
-#define UDP_PAYLOAD_SIZE 1000
-#define INTER_MEASUREMENT_TIME 15
-#define NUM_UDP_PACKETS 6000
-#define UDP_TTL 255
+void send_json_over_tcp(char* jsonFile) {
+    int sockfd;
+    struct sockaddr_in server_addr;
 
-void send_json_data(char* jsonFile) {
-    // Open the JSON file for reading
-    FILE *config_file = fopen(jsonFile, "r");
-    if (!config_file) {
-        perror("Failed to open config.json");
-        return;
-    }
-
-    // Calculate the file size
-    fseek(config_file, 0, SEEK_END);
-    long file_size = ftell(config_file);
-    fseek(config_file, 0, SEEK_SET);
-
-    // Read the file content into a buffer
-    char *json_data = (char *)malloc(file_size + 1);
-    fread(json_data, 1, file_size, config_file);
-    json_data[file_size] = '\0';
-
-    // Close the file
-    fclose(config_file);
-
-    // Create a TCP socket to connect to the server
-    int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (tcp_socket < 0) {
+    // Create a TCP socket
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
         perror("TCP socket creation failed");
-        free(json_data);
-        return;
+        exit(EXIT_FAILURE);
     }
 
-    // Define the server's TCP address
-    struct sockaddr_in server_tcp_addr;
-    memset(&server_tcp_addr, 0, sizeof(server_tcp_addr));
-    server_tcp_addr.sin_family = AF_INET;
-    server_tcp_addr.sin_port = htons(SERVER_TCP_PORT);
-    server_tcp_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    memset(&server_addr, 0, sizeof(server_addr));
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_TCP_PORT);
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
 
     // Connect to the server over TCP
-    if (connect(tcp_socket, (struct sockaddr *)&server_tcp_addr, sizeof(server_tcp_addr)) < 0) {
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("TCP connection failed");
-        close(tcp_socket);
-        free(json_data);
-        return;
+        close(sockfd);
+        exit(EXIT_FAILURE);
     }
 
-    // Send the JSON data to the server
-    send(tcp_socket, json_data, strlen(json_data), 0);
+    // Read and send the JSON file over TCP
+    FILE *json_file = fopen(jsonFile, "r");
+    if (json_file == NULL) {
+        perror("Error opening JSON file");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
 
-    // Close the TCP socket and free allocated memory
-    close(tcp_socket);
-    free(json_data);
+    char buffer[1024];
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
+        send(sockfd, buffer, bytesRead, 0);
+    }
+
+    fclose(json_file);
+    close(sockfd);
 }
 
-void receive_data() {
-    // Create a UDP socket to receive data
-    int udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (udp_socket < 0) {
+void send_udp_packets(int payload_type) {
+    int sockfd;
+    struct sockaddr_in server_addr , client_addr;
+	char packet[PACKET_SIZE];
+	
+    // Create a UDP socket
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
         perror("UDP socket creation failed");
-        return;
+        exit(EXIT_FAILURE);
+    }
+    
+	memset(&server_addr, 0, sizeof(server_addr));
+    
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_UDP_PORT);
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+
+    // Set the source port for UDP
+    memset(&client_addr, 0, sizeof(client_addr));
+    
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(SOURCE_PORT_UDP); // Set the desired source UDP port
+    client_addr.sin_addr.s_addr = INADDR_ANY;       // Let the system choose the source IP
+
+    // Bind the socket to the specified source port for UDP
+    if (bind(sockfd, (struct sockaddr *)&client_addr, sizeof(client_addr)) < 0) {
+        perror("Binding source port for UDP failed");
+        close(sockfd);
+        exit(EXIT_FAILURE);
     }
 
-    // Bind the UDP socket to the source port
-    struct sockaddr_in client_udp_addr;
-    memset(&client_udp_addr, 0, sizeof(client_udp_addr));
-    client_udp_addr.sin_family = AF_INET;
-    client_udp_addr.sin_port = htons(SOURCE_UDP_PORT);
-    client_udp_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(udp_socket, (struct sockaddr *)&client_udp_addr, sizeof(client_udp_addr)) < 0) {
-        perror("UDP bind failed");
-        close(udp_socket);
-        return;
+	//Set the DOnt Fragment flag in IP header
+	int enable = 1;
+    if (setsockopt(sockfd, IPPROTO_IP, IP_MTU_DISCOVER, &enable, sizeof(enable)) < 0) {
+        perror("Failed to set DF flag");
+        exit(EXIT_FAILURE);
     }
 
-    // Define the server's UDP address
-    struct sockaddr_in server_udp_addr;
-    memset(&server_udp_addr, 0, sizeof(server_udp_addr));
-    server_udp_addr.sin_family = AF_INET;
-    server_udp_addr.sin_port = htons(DEST_UDP_PORT);
-    server_udp_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-
-    // Receive data from the server
-    char status;
-    int bytes_received = recvfrom(udp_socket, &status, sizeof(status), 0, NULL, NULL);
-
-    if (bytes_received == sizeof(status)) {
-        if (status == '0') {
-            printf("Data wasn't compressed (status: %c)\n", status);
-        } else if (status == '1') {
-            printf("Data was compressed (status: %c)\n", status);
-        } else {
-            printf("Received unknown status: %c\n", status);
-        }
-    } else {
-        perror("Error while receiving status");
+    // Send UDP packets (low entropy data)
+    for (int i = 0; i < PACKET_COUNT; i++) {
+    	memset(packet, 0, sizeof(packet)); // Initialize packet with all 0's
+    	
+    	if(payload_type == 1){
+		    //Fill packet wil random data
+		    FILE *urandom = fopen("/dev/urandom", "rb");
+		    fread(packet, 1, sizeof(packet), urandom);
+		    fclose(urandom);
+	    }
+	    sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	    usleep(100000); // Sleep for 100 milliseconds between packets
     }
 
-    // Close the UDP socket
-    close(udp_socket);
+    close(sockfd);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
+	struct timespec start, end;
+	long time_diff;
+
+	//error check
 	if(argc != 2){
-		perror("Wrong number of arguments");
+		printf("Error: Incorrect number of arguments");
+		return EXIT_FAILURE;
 	}
-    // Send JSON data to the server
-    send_json_data(argv[1]);
+	//TCP and JSON
+		send_json_over_tcp(argv[1]);
+	// Measure the time taken to send the first packet train
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    send_udp_packets(0); // Send packets with all 0's as payload
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
-    // Receive and process data from the server
-    receive_data();
+	time_diff = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
+	if (time_diff > THRESHOLD) {
+		printf("Compression detected!\n");
+	} else {
+		printf("No compression was detected.\n");
+	}
+	
+    // Measure the time taken to send the second packet train with random data Move this to server
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    send_udp_packets(1); // Send packets with random data
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
+    time_diff = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
+
+    if (time_diff > THRESHOLD) {
+        printf("Compression detected!\n");
+    } else {
+        printf("No compression was detected.\n");
+    }
+
+	
     return 0;
 }
