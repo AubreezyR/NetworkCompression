@@ -57,6 +57,8 @@ void receive_json_over_tcp(unsigned short  server_port) {
 		close(tcp_socket);
 		return;
 	}	
+	close(client_tcp_socket);
+
     // convert the json buffer to a dictionary
 	//json_buffer[json_bytes_recieved] = '\0';
 	//cJSON* root = cJSON_Parse(json_buffer);
