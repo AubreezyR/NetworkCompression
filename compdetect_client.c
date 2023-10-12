@@ -16,11 +16,32 @@
 #define INTER_MEASUREMENT_TIME 5 // Inter-measurement time in seconds
 #define THRESHOLD 100 // Threshold for compression detection (in milliseconds)
 
-void send_json_data() {
+void send_json_data(char* jsonFile) {
+    // Open the JSON file for reading
+    FILE *config_file = fopen(jsonFile, "r");
+    if (!config_file) {
+        perror("Failed to open config.json");
+        return;
+    }
+
+    // Calculate the file size
+    fseek(config_file, 0, SEEK_END);
+    long file_size = ftell(config_file);
+    fseek(config_file, 0, SEEK_SET);
+
+    // Read the file content into a buffer
+    char *json_data = (char *)malloc(file_size + 1);
+    fread(json_data, 1, file_size, config_file);
+    json_data[file_size] = '\0';
+
+    // Close the file
+    fclose(config_file);
+
     // Create a TCP socket to connect to the server
     int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_socket < 0) {
         perror("TCP socket creation failed");
+        free(json_data);
         return;
     }
 
@@ -29,28 +50,22 @@ void send_json_data() {
     memset(&server_tcp_addr, 0, sizeof(server_tcp_addr));
     server_tcp_addr.sin_family = AF_INET;
     server_tcp_addr.sin_port = htons(SERVER_TCP_PORT);
-    server_tcp_addr.sin_addr.s_addr =inet_addr(SERVER_IP);
+    server_tcp_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
 
     // Connect to the server over TCP
     if (connect(tcp_socket, (struct sockaddr *)&server_tcp_addr, sizeof(server_tcp_addr)) < 0) {
         perror("TCP connection failed");
         close(tcp_socket);
+        free(json_data);
         return;
     }
 
-    // Create and send JSON data
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "name", "John");
-    cJSON_AddNumberToObject(root, "age", 30);
-
-    char *json_data = cJSON_Print(root);
+    // Send the JSON data to the server
     send(tcp_socket, json_data, strlen(json_data), 0);
 
-    cJSON_Delete(root);
-    free(json_data);
-
-    // Close the TCP socket
+    // Close the TCP socket and free allocated memory
     close(tcp_socket);
+    free(json_data);
 }
 
 void send_udp_packets(int entropy) {
@@ -79,17 +94,20 @@ void send_udp_packets(int entropy) {
     close(udp_socket);
 }
 
-int main() {
+int main(int argc, char*argv[]) {
+	if(argc != 2){
+		perror("Wrong number of args");
+	}
     // Send JSON data to the server
-    send_json_data();
+    send_json_data(argv[1]);
 
-    // Sleep for inter-measurement time (gamma)
+    // Sleep for inter-measurement time
     sleep(INTER_MEASUREMENT_TIME);
 
     // Send UDP packets with low entropy data
     send_udp_packets(LOW_ENTROPY_PACKET_COUNT);
 
-    // Sleep for inter-measurement time (gamma)
+    // Sleep for inter-measurement time
     sleep(INTER_MEASUREMENT_TIME);
 
     // Send UDP packets with high entropy data
@@ -99,8 +117,11 @@ int main() {
     int compression_detected;
     int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_tcp_addr;
-    // Fill in server_tcp_addr with the server's information (same as in send_json_data)
-
+	memset(&server_tcp_addr, 0, sizeof(server_tcp_addr));
+    server_tcp_addr.sin_family = AF_INET;
+    server_tcp_addr.sin_port = htons(SERVER_TCP_PORT);
+    server_tcp_addr.sin_addr.s_addr =inet_addr(SERVER_IP);
+    
     if (connect(tcp_socket, (struct sockaddr *)&server_tcp_addr, sizeof(server_tcp_addr)) < 0) {
         perror("TCP connection failed");
         close(tcp_socket);
