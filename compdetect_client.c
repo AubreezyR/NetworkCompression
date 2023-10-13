@@ -58,7 +58,7 @@ void send_json_over_tcp(char* jsonFile) {
     fclose(json_file);
     close(sockfd);
 }
-
+/*
 void send_udp_packets(int payload_type) {
     int sockfd;
     struct sockaddr_in server_addr , client_addr;
@@ -112,7 +112,45 @@ void send_udp_packets(int payload_type) {
     }
 
     close(sockfd);
+}*/
+
+
+void send_udp_packets(int packet_amount, int packet_type) {
+    // Create a UDP socket
+    int udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    char packet[PACKET_SIZE];
+    if (udp_socket < 0) {
+        perror("UDP socket creation failed");
+        return;
+    }
+
+    // Define the server's UDP address
+    struct sockaddr_in server_udp_addr;
+    memset(&server_udp_addr, 0, sizeof(server_udp_addr));
+    server_udp_addr.sin_family = AF_INET;
+    server_udp_addr.sin_port = htons(SERVER_UDP_PORT);
+    
+
+    // Generate and send UDP packets
+    // Send UDP packets (low entropy data)
+        for (int i = 0; i < packet_amount; i++) {
+	       	memset(packet, 0, sizeof(packet)); // Initialize packet with all 0's
+	       	
+	       	if(packet_type == 1){
+	   		    //Fill packet wil random data
+	   		    FILE *urandom = fopen("/dev/urandom", "rb");
+	   		    fread(packet, 1, sizeof(packet), urandom);
+	   		    fclose(urandom);
+	   	    }
+	   	    sendto(udp_socket, packet, sizeof(packet), 0, (struct sockaddr *)&server_udp_addr, sizeof(server_udp_addr));
+	   	    sleep(15000);
+       }
+
+    // Close the UDP socket
+    close(udp_socket);
 }
+
+
 
 int main(int argc, char *argv[]) {
 	//error check
@@ -124,11 +162,11 @@ int main(int argc, char *argv[]) {
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
 	printf("JSON sent, Sending low packets...");
-	send_udp_packets(0);
+	send_udp_packets(5,0);
 	printf("low packets sent, waiting 15 secs....");
 	sleep(WAIT_TIME);
 	printf("Sleep over, now sending high packets...");
-	send_udp_packets(0);
+	send_udp_packets(5,1);
 	// recieve from server if there was compression
     
 	
