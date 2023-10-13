@@ -33,20 +33,20 @@ void receive_json_over_tcp() {
    		close(tcp_socket);
    		return;
    	}
-       // Listen for incoming connections
+    // Listen for incoming connections
    	if(listen(tcp_socket,1)< 0){
    		printf("TCP socket listening failed");
    		close(tcp_socket);
    		return;
    	}
-       // Accept the connection
+    // Accept the connection
    	int client_tcp_socket = accept(tcp_socket, NULL, NULL);
    	if(client_tcp_socket < 0){
    		printf("TCP socket accept failed");
    		close(tcp_socket);
    		return;
    	}
-       // get JSON data 
+    // get JSON data 
    	ssize_t json_bytes_recieved = recv(client_tcp_socket, json_buffer, sizeof(json_buffer), 0);
    	if(json_bytes_recieved < 0){
    		printf("Error receving JSON data");
@@ -54,9 +54,10 @@ void receive_json_over_tcp() {
    		close(tcp_socket);
    		return;
    	}	
-       // convert the json buffer to a dictionary
+    // convert the json buffer to a dictionary
    	json_buffer[json_bytes_recieved] = '\0';
    	cJSON* root = cJSON_Parse(json_buffer);
+   	print(root);
     	
     }
     
@@ -90,14 +91,14 @@ void receive_udp_packets() {
 
     // Receive and process UDP packets
     for (int i = 0; i < PACKET_COUNT * 2; i++) {
-        ssize_t bytes_received = recvfrom(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&client_addr, &client_addr_len);
+	    ssize_t bytes_received = recvfrom(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&client_addr, &client_addr_len);
 
-        if (bytes_received < 0) {
-            printf("UDP packet reception error");
-            continue; // Skip processing on error
-        }
+	    if (bytes_received < 0) {
+	        printf("UDP packet reception error");
+	        continue; // Skip processing on error
+	    }
 
-        printf("Received UDP packet %d", i);
+    	printf("Received UDP packet %d", i);
     }
 
     close(sockfd);

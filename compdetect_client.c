@@ -12,8 +12,9 @@
 #define SERVER_UDP_PORT 8765  
 #define SOURCE_PORT_UDP 9876
 #define PACKET_SIZE 1400     
-#define PACKET_COUNT 10      
-#define THRESHOLD 100        
+#define PACKET_COUNT 5      
+#define THRESHOLD 100
+#define WAIT_TIME 15000       
    
 
 void send_json_over_tcp(char* jsonFile) {
@@ -81,7 +82,6 @@ void send_udp_packets(int payload_type) {
     
     client_addr.sin_family = AF_INET;
     client_addr.sin_port = htons(SOURCE_PORT_UDP); // Set the desired source UDP port
-    client_addr.sin_addr.s_addr = INADDR_ANY;       // Let the system choose the source IP
 
     // Bind the socket to the specified source port for UDP
     if (bind(sockfd, (struct sockaddr *)&client_addr, sizeof(client_addr)) < 0) {
@@ -108,48 +108,28 @@ void send_udp_packets(int payload_type) {
 		    fclose(urandom);
 	    }
 	    sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	    usleep(100000); // Sleep for 100 milliseconds between packets
     }
 
     close(sockfd);
 }
 
 int main(int argc, char *argv[]) {
-	struct timespec start, end;
-	long time_diff;
-
 	//error check
 	if(argc != 2){
 		printf("Error: Incorrect number of arguments");
 		return EXIT_FAILURE;
 	}
 	//TCP and JSON
-		send_json_over_tcp(argv[1]);
-	// Measure the time taken to send the first packet train
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    send_udp_packets(0); // Send packets with all 0's as payload
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-	time_diff = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
-	if (time_diff > THRESHOLD) {
-		printf("Compression detected!\n");
-	} else {
-		printf("No compression was detected.\n");
-	}
-	
-    // Measure the time taken to send the second packet train with random data Move this to server
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    send_udp_packets(1); // Send packets with random data
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    time_diff = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
-
-    if (time_diff > THRESHOLD) {
-        printf("Compression detected!\n");
-    } else {
-        printf("No compression was detected.\n");
-    }
-
+	printf("Sending JSON...");
+	send_json_over_tcp(argv[1]);
+	printf("JSON sent, Sending low packets...");
+	send_udp_packets(0);
+	printf("low packets sent, waiting 15 secs....");
+	sleep(WAIT_TIME);
+	printf("Sleep over, now sending high packets...");
+	send_udp_packets(0);
+	// recieve from server if there was compression
+    
 	
     return 0;
 }
