@@ -108,6 +108,7 @@ void send_udp_packets(int payload_type) {
 		    fclose(urandom);
 	    }
 	    sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	    sleep(15000);
     }
 
     close(sockfd);
