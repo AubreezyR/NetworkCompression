@@ -14,6 +14,7 @@
 #define THRESHOLD 100
 
 void receive_json_over_tcp() {
+	printf("17");
     char json_buffer[1042];
     // Create the TCP socket MAKE SURE TO ERROR CHECK
    	int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);

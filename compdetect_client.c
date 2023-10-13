@@ -14,7 +14,7 @@
 #define PACKET_SIZE 1400     
 #define PACKET_COUNT 5      
 #define THRESHOLD 100
-#define WAIT_TIME 15000       
+#define WAIT_TIME 100      
    
 
 void send_json_over_tcp(char* jsonFile) {
