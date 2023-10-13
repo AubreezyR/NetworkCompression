@@ -29,7 +29,7 @@ void send_json_over_tcp(char* jsonFile) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
 
-    if((status = getaddrinfo(NULL, "7777", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo("192.168.128.3", "8080", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
