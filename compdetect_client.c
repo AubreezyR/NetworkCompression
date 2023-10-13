@@ -5,7 +5,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <time.h>
+#include  <netdb.h>
+#include "cJSON.h"
 //later this info comes from config file
 #define SERVER_IP "192.168.128.3" 
 #define SERVER_TCP_PORT 8080     
@@ -18,9 +19,71 @@
    
 
 void send_json_over_tcp(char* jsonFile) {
-    int sockfd;
-    struct sockaddr_in server_addr;
+    int s;
+   	int status;
+   	struct addrinfo hints;
+   	struct addrinfo *servinfo;
+   
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
 
+    if((status = getaddrinfo(NULL, "7777", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
+		exit(1);
+    }
+   	//set up socket
+   	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+   	//bind socket to port
+   	/*
+   	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
+   		perror("TCP socket bind fail");
+   		exit(1);
+   	}*/
+   	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
+   		perror("Connect error");
+   		close(s);
+   	}
+
+	// Read and send the JSON file over TCP
+    FILE *json_file = fopen(jsonFile, "r");
+    if (json_file == NULL) {
+        perror("Error opening JSON file");
+        close(s);	
+        exit(EXIT_FAILURE);
+    }
+
+    char buffer[1024];
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
+    	send(s, buffer, bytesRead, 0);
+    }
+
+    fclose(json_file);
+   	close(s);   	
+   	
+   	
+    
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
     // Create a TCP socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -56,7 +119,7 @@ void send_json_over_tcp(char* jsonFile) {
     }
 
     fclose(json_file);
-    close(sockfd);
+    close(sockfd);*/
 }
 /*
 void send_udp_packets(int payload_type) {
@@ -161,12 +224,14 @@ int main(int argc, char *argv[]) {
 	//TCP and JSON
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
+	/*
 	printf("JSON sent, Sending low packets...");
 	send_udp_packets(5,0);
 	printf("low packets sent, waiting 15 secs....");
 	sleep(WAIT_TIME);
 	printf("Sleep over, now sending high packets...");
 	send_udp_packets(5,1);
+	*/
 	// recieve from server if there was compression
     
 	

@@ -5,17 +5,63 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netdb.h>
 #include "cJSON.h"
 
-#define SERVER_TCP_PORT 8080   // TCP port to receive JSON data
+#define SERVER_TCP_PORT 7777   // TCP port to receive JSON data
 #define SERVER_UDP_PORT 8765   // UDP port to receive UDP packets
 #define PACKET_SIZE 1400     
 #define PACKET_COUNT 10      
 #define THRESHOLD 100
 
 void receive_json_over_tcp() {
-	printf("17");
+	int s, new_s;
+	int status;
+	struct addrinfo hints;
+	struct addrinfo *servinfo;
     char json_buffer[1042];
+    struct sockaddr_storage their_addr;
+    socklen_t addr_size;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
+
+    if((status = getaddrinfo(NULL, "7777", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
+		exit(1);
+    }
+	//set up socket
+	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+	//bind socket to port
+	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
+		perror("TCP socket bind fail");
+		exit(1);
+	}
+	//listen for connection
+	if(listen(s, 10) < 0){
+		perror("listen error");
+		exit(1);
+	}
+	
+	addr_size = sizeof(their_addr);
+	new_s = accept(s, (struct sockaddr *)&their_addr, &addr_size);
+
+	if(new_s < 0){
+		perror("Accept error");
+	}
+	if(recv(s, json_buffer, sizeof(json_buffer), 0)< 0){
+		perror("recv error");
+	}
+
+
+
+
+
+
+	/*
+    freeaddrinfo(servinfo);
     // Create the TCP socket MAKE SURE TO ERROR CHECK
    	int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
    	if (tcp_socket < 0) {
@@ -61,8 +107,8 @@ void receive_json_over_tcp() {
    	cJSON_Print(root);
 
    	close(tcp_socket);
-    	
-    }
+    */	
+   }
     
 
 
@@ -109,7 +155,8 @@ void receive_udp_packets() {
 
 int main() {
     // Call functions to receive JSON and UDP packets
+    printf("starting connection...");
     receive_json_over_tcp();
-    receive_udp_packets();
+    //receive_udp_packets();
     return 0;
 }
