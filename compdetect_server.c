@@ -26,9 +26,8 @@ void receive_json_over_tcp() {
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
 
-    if((status = getaddrinfo(NULL, "7777", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo("192.168.128.3", "8080", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
@@ -37,11 +36,13 @@ void receive_json_over_tcp() {
 	//bind socket to port
 	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
 		perror("TCP socket bind fail");
+		close(s);
 		exit(1);
 	}
 	//listen for connection
 	if(listen(s, 10) < 0){
 		perror("listen error");
+		close(s);
 		exit(1);
 	}
 	
@@ -50,12 +51,22 @@ void receive_json_over_tcp() {
 
 	if(new_s < 0){
 		perror("Accept error");
+		close(s);
+		exit(1);
 	}
-	if(recv(s, json_buffer, sizeof(json_buffer), 0)< 0){
+	if(recv(new_s, json_buffer, sizeof(json_buffer), 0)< 0){
 		perror("recv error");
+		close(s);
+		exit(1);
 	}
 
-
+	// convert the json buffer to a dictionary
+   	json_buffer[sizeof(json_buffer) + 1] = '\0';
+   	cJSON* root = cJSON_Parse(json_buffer);
+  char*  jsonString = cJSON_Print(root);
+   printf("JSON DATA:\n%s", jsonString);
+	
+	close(s);
 
 
 
