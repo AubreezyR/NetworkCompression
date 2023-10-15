@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include  <netdb.h>
+#include <fcntl.h>
 #include "cJSON.h"
 //later this info comes from config file
 #define SERVER_IP "192.168.128.3" 
@@ -16,7 +17,7 @@
 #define PACKET_COUNT 5      
 #define THRESHOLD 100
 #define WAIT_TIME 100      
-   
+//TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
 void send_json_over_tcp(char* jsonFile) {
     int s;
@@ -35,17 +36,11 @@ void send_json_over_tcp(char* jsonFile) {
     }
    	//set up socket
    	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-   	//bind socket to port
-   	/*
-   	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
-   		perror("TCP socket bind fail");
-   		exit(1);
-   	}*/
+
    	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
    		perror("Connect error");
    		close(s);
    	}
-
 	// Read and send the JSON file over TCP
     FILE *json_file = fopen(jsonFile, "r");
     if (json_file == NULL) {
@@ -53,73 +48,14 @@ void send_json_over_tcp(char* jsonFile) {
         close(s);	
         exit(EXIT_FAILURE);
     }
-
     char buffer[1024];
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
     	send(s, buffer, bytesRead, 0);
     }
-
     fclose(json_file);
    	close(s);   	
    	
-   	
-    
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/*
-    // Create a TCP socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        perror("TCP socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    memset(&server_addr, 0, sizeof(server_addr));
-
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_TCP_PORT);
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-
-    // Connect to the server over TCP
-    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("TCP connection failed");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-    // Read and send the JSON file over TCP
-    FILE *json_file = fopen(jsonFile, "r");
-    if (json_file == NULL) {
-        perror("Error opening JSON file");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-    char buffer[1024];
-    size_t bytesRead;
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
-        send(sockfd, buffer, bytesRead, 0);
-    }
-
-    fclose(json_file);
-    close(sockfd);*/
 }
 /*
 void send_udp_packets(int payload_type) {
@@ -178,41 +114,70 @@ void send_udp_packets(int payload_type) {
 }*/
 
 
-void send_udp_packets(int packet_amount, int packet_type) {
-    // Create a UDP socket
-    int udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    char packet[PACKET_SIZE];
-    if (udp_socket < 0) {
-        perror("UDP socket creation failed");
-        return;
+void send_udp_packets(int packet_type) {
+    int s;
+   	int status;
+   	struct addrinfo hints;
+   	struct addrinfo *servinfo;
+   
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
+
+    if((status = getaddrinfo("192.168.128.3", "8080", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
+		exit(1);
     }
+   	//set up socket
+   	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+   	//bind socket to port
+   	/*
+   	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
+   		perror("TCP socket bind fail");
+   		exit(1);
+   	}*/
+   	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
+   		perror("Connect error");
+   		close(s);
+   	}
 
-    // Define the server's UDP address
-    struct sockaddr_in server_udp_addr;
-    memset(&server_udp_addr, 0, sizeof(server_udp_addr));
-    server_udp_addr.sin_family = AF_INET;
-    server_udp_addr.sin_port = htons(SERVER_UDP_PORT);
-    
+   	
 
-    // Generate and send UDP packets
-    // Send UDP packets (low entropy data)
-        for (int i = 0; i < packet_amount; i++) {
-	       	memset(packet, 0, sizeof(packet)); // Initialize packet with all 0's
-	       	
-	       	if(packet_type == 1){
-	   		    //Fill packet wil random data
-	   		    FILE *urandom = fopen("/dev/urandom", "rb");
-	   		    fread(packet, 1, sizeof(packet), urandom);
-	   		    fclose(urandom);
-	   	    }
-	   	    sendto(udp_socket, packet, sizeof(packet), 0, (struct sockaddr *)&server_udp_addr, sizeof(server_udp_addr));
-	   	    sleep(15000);
-       }
+   // Create the packet
+   char packet_load[100]; // Declare a character array
+   
+   // Fill the string with null characters
+   memset(packet_load, '0', sizeof(packet_load));
 
-    // Close the UDP socket
-    close(udp_socket);
+   // Open /dev/urandom as a source of randomness if we are doing a high packet
+   if(packet_type){
+	   int urandom_fd = open("/dev/urandom", O_RDONLY);
+	   if (urandom_fd == -1) {
+	       perror("open /dev/urandom");
+	       exit(1);
+	   }
+
+	   // Read random data from /dev/urandom to replace null characters
+	   if (read(urandom_fd, packet_load, sizeof(packet_load)) == -1) {
+	       perror("read /dev/urandom");
+	       close(urandom_fd);
+	       exit(1);
+	   }
+
+	   close(urandom_fd);
+   }
+
+   // Send the data to the server
+   if (sendto(s, packet_load, strlen(packet_load), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+       perror("sendto");
+       exit(1);
+   }
+
+   freeaddrinfo(servinfo);
+   close(s);
+
 }
-
 
 
 int main(int argc, char *argv[]) {
@@ -224,14 +189,12 @@ int main(int argc, char *argv[]) {
 	//TCP and JSON
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
-	/*
 	printf("JSON sent, Sending low packets...");
-	send_udp_packets(5,0);
+	send_udp_packets(0);
 	printf("low packets sent, waiting 15 secs....");
 	sleep(WAIT_TIME);
 	printf("Sleep over, now sending high packets...");
-	send_udp_packets(5,1);
-	*/
+	send_udp_packets(1);
 	// recieve from server if there was compression
     
 	
