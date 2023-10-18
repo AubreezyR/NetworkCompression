@@ -119,11 +119,10 @@ void send_udp_packets(int packet_type) {
    	int status;
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
-   	char* dst = "192.168.128.3";
    
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
-    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
 
     if((status = getaddrinfo("192.168.128.3", "8765", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
@@ -142,6 +141,8 @@ void send_udp_packets(int packet_type) {
    		perror("Connect error");
    		close(s);
    	}
+
+   	
 
    // Create the packet
    char packet_load[100]; // Declare a character array
@@ -168,8 +169,7 @@ void send_udp_packets(int packet_type) {
    }
 
    // Send the data to the server
-   
-   if (sendto(s, packet_load, strlen(packet_load) + 1, 0,(struct sockaddr*)&dst, sizeof(dst)) == -1) {
+   if (sendto(s, packet_load, strlen(packet_load), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
        perror("sendto");
        exit(1);
    }
