@@ -119,6 +119,7 @@ void send_udp_packets(int packet_type) {
    	int status;
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
+   	char* dst = "192.168.128.3";
    
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
@@ -167,7 +168,8 @@ void send_udp_packets(int packet_type) {
    }
 
    // Send the data to the server
-   if (sendto(s, packet_load, strlen(packet_load), 0,(struct sockaddr*) servinfo->ai_addr, sizeof(servinfo->ai_addr)) == -1) {
+   
+   if (sendto(s, packet_load, strlen(packet_load) + 1, 0,(struct sockaddr*)&dst, sizeof(dst)) == -1) {
        perror("sendto");
        exit(1);
    }
