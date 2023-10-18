@@ -142,8 +142,6 @@ void send_udp_packets(int packet_type) {
    		close(s);
    	}
 
-   	
-
    // Create the packet
    char packet_load[100]; // Declare a character array
    
@@ -169,7 +167,7 @@ void send_udp_packets(int packet_type) {
    }
 
    // Send the data to the server
-   if (sendto(s, packet_load, strlen(packet_load), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+   if (sendto(s, packet_load, strlen(packet_load), 0,(struct sockaddr*) servinfo->ai_addr, sizeof(servinfo->ai_addr)) == -1) {
        perror("sendto");
        exit(1);
    }
