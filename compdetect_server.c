@@ -119,7 +119,7 @@ void receive_udp_packets() {
     while (1) {
         addr_size = sizeof their_addr;
         ssize_t num_bytes = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&their_addr, &addr_size);
-        if (num_bytes == -1) {
+        if (num_bytes < 0) {
             perror("recvfrom");
             exit(1);
         }

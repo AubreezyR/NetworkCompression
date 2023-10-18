@@ -16,7 +16,7 @@
 #define PACKET_SIZE 1400     
 #define PACKET_COUNT 5      
 #define THRESHOLD 100
-#define WAIT_TIME 100      
+#define WAIT_TIME 1000      
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
 void send_json_over_tcp(char* jsonFile) {
@@ -145,13 +145,13 @@ void send_udp_packets(int packet_type) {
    	
 
    // Create the packet
-   char packet_load[100]; // Declare a character array
+   char packet_low[100]; // Declare a character array
+   char packet_high[100];
    
    // Fill the string with null characters
-   memset(packet_load, '0', sizeof(packet_load));
+   memset(packet_low, '0', sizeof(packet_low));
 
    // Open /dev/urandom as a source of randomness if we are doing a high packet
-   if(packet_type){
 	   int urandom_fd = open("/dev/urandom", O_RDONLY);
 	   if (urandom_fd == -1) {
 	       perror("open /dev/urandom");
@@ -159,17 +159,22 @@ void send_udp_packets(int packet_type) {
 	   }
 
 	   // Read random data from /dev/urandom to replace null characters
-	   if (read(urandom_fd, packet_load, sizeof(packet_load)) == -1) {
+	   if (read(urandom_fd, packet_high, sizeof(packet_high)) == -1) {
 	       perror("read /dev/urandom");
 	       close(urandom_fd);
 	       exit(1);
 	   }
 
 	   close(urandom_fd);
-   }
 
    // Send the data to the server
-   if (sendto(s, packet_load, strlen(packet_load), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+   if (sendto(s, packet_low, strlen(packet_low), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+       perror("sendto");
+       exit(1);
+   }
+   sleep(WAIT_TIME);
+   // Send the data to the server
+   if (sendto(s, packet_high, strlen(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
        perror("sendto");
        exit(1);
    }
@@ -192,9 +197,7 @@ int main(int argc, char *argv[]) {
 	printf("JSON sent, Sending low packets...");
 	send_udp_packets(0);
 	printf("low packets sent, waiting 15 secs....");
-	sleep(WAIT_TIME);
-	printf("Sleep over, now sending high packets...");
-	send_udp_packets(1);
+	
 	// recieve from server if there was compression
     
 	
