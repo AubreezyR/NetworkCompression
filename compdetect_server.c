@@ -64,7 +64,7 @@ void receive_json_over_tcp() {
    	json_buffer[sizeof(json_buffer) - 1] = '\0';
    	cJSON* root = cJSON_Parse(json_buffer);
   	char*  jsonString = cJSON_Print(root);
-   	printf("JSON DATA:\n%s", jsonString);
+   	printf("JSON DATA:\n%s\n", jsonString);
 
 	freeaddrinfo(servinfo);
 	close(s);
@@ -78,7 +78,7 @@ void receive_udp_packets() {
     socklen_t addr_size;
     char buffer[1042];
 
-    struct addrinfo hints, *res;
+    struct addrinfo hints, *res, *p;
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET; // Use IPv4
@@ -95,9 +95,21 @@ void receive_udp_packets() {
        exit(1);
     }
 
-    if (bind(sockfd, res->ai_addr, res->ai_addrlen) == -1) {
-        perror("bind");
-        exit(1);
+// Iterate through the list of results to find a suitable address to bind
+    for (p = res; p != NULL; p = p->ai_next) {
+        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (sockfd == -1) {
+            perror("socket");
+            continue;
+        }
+
+        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("bind");
+            continue;
+        }
+
+        break;  // Successfully bound the socket
     }
 
     freeaddrinfo(res);
