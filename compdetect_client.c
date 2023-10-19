@@ -9,21 +9,11 @@
 #include <fcntl.h>
 #include "cJSON.h"
 //later this info comes from config file
-char* SERVER_IP_ADDRESS;
-char* SOURCE_PORT_NUMBER_UDP;
-char* DESTINATION_PORT_NUMBER_UDP;
-char* DESTINATION_PORT_NUMBER_TCP_HEAD_SYN;
-char* DESTINATION_PORT_NUMBER_TCP_TAIL_SYN;
-char* PORT_NUMBER_TCP_PRE_PROBING_PHASES;
-char* PORT_NUMBER_TCP_POST_PROBING_PHASES;
-char* SIZE_OF_UDP_PAYLOAD_IN_BYTES;
-char* INTER_MEASUREMENT_TIME_IN_SECONDS;
-char* NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN;
-char* TTL_FOR_UDP_PACKETS;
+cJSON*json_dict;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
 void asign_from_json(char* jsonFile) {
-	cJSON *root;
+
 	FILE *file = fopen(jsonFile, "r");
     if (!file) {
         perror("Failed to open the JSON file");
@@ -46,16 +36,17 @@ void asign_from_json(char* jsonFile) {
     json_data[file_size] = '\0';
 
     // Parse the JSON data
-    root = cJSON_Parse(json_data);
+    json_dict = cJSON_Parse(json_data);
     free(json_data);
 
-    if (root == NULL) {
+    if (json_dict == NULL) {
         perror("Failed to parse JSON data");
         exit(1);
     }
     // Access values from the JSON object and store them as variables
-    SERVER_IP_ADDRESS = cJSON_GetObjectItem(root, "ServerIPAddress")->valuestring;
-    SOURCE_PORT_NUMBER_UDP = cJSON_GetObjectItem(root, "SourcePortNumberUDP")->valuestring;
+    /*
+    SERVER_IP_ADDRESS = ;
+    SOURCE_PORT_NUMBER_UDP = ;
     DESTINATION_PORT_NUMBER_UDP = cJSON_GetObjectItem(root, "DestinationPortNumberUDP")->valuestring;
     DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPHeadSYN")->valuestring;
     DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPTailSYN")->valuestring;
@@ -64,11 +55,7 @@ void asign_from_json(char* jsonFile) {
     SIZE_OF_UDP_PAYLOAD_IN_BYTES = cJSON_GetObjectItem(root, "SizeOfUDPPayloadInBytes")->valuestring;
     INTER_MEASUREMENT_TIME_IN_SECONDS = cJSON_GetObjectItem(root, "InterMeasurementTimeInSeconds")->valuestring;
     NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = cJSON_GetObjectItem(root, "NumberOfUDPPacketsInPacketTrain")->valuestring;
-    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;
-
-    cJSON_Delete(root);
-    
-
+    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;*/   
     
 }
 
@@ -77,6 +64,8 @@ void send_json_over_tcp(char* jsonFile) {
    	int status;
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
+   	char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
+   	char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
    	
    	   	
     memset(&hints, 0, sizeof hints);
@@ -84,7 +73,7 @@ void send_json_over_tcp(char* jsonFile) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
 
-    if((status = getaddrinfo(SERVER_IP_ADDRESS, PORT_NUMBER_TCP_PRE_PROBING_PHASES, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo(ip, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
@@ -159,7 +148,7 @@ void send_udp_packets(int packet_type) {
         perror("sendto");
         exit(1);
     }
-    sleep(atoi(INTER_MEASUREMENT_TIME_IN_SECONDS));
+    //sleep(atoi(INTER_MEASUREMENT_TIME_IN_SECONDS));
 
     // Send the data to the server
     if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
@@ -184,7 +173,7 @@ int main(int argc, char *argv[]) {
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
 	printf("JSON sent, Sending low packets...");
-	send_udp_packets(0);
+	//send_udp_packets(0);
 	printf("low packets sent, waiting 15 secs....");
 	
 	// recieve from server if there was compression
