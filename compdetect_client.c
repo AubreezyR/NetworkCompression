@@ -22,14 +22,15 @@ char* NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN;
 char* TTL_FOR_UDP_PACKETS;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
-void asign_from_json(char* jsonFile) {
-    // Read the JSON data from the file
+void parseJsonConfig(const char* jsonFile) {
+    // Check if the JSON file can be opened
     FILE* file = fopen(jsonFile, "r");
     if (file == NULL) {
         perror("Error opening JSON file");
         exit(EXIT_FAILURE);
     }
 
+    // Read the JSON data from the file
     fseek(file, 0, SEEK_END);
     long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
@@ -47,7 +48,20 @@ void asign_from_json(char* jsonFile) {
         exit(EXIT_FAILURE);
     }
 
-    // Iterate through the JSON object's key-value pairs and store as char*
+    // Free previously allocated memory
+    free(SERVER_IP_ADDRESS);
+    free(SOURCE_PORT_NUMBER_UDP);
+    free(DESTINATION_PORT_NUMBER_UDP);
+    free(DESTINATION_PORT_NUMBER_TCP_HEAD_SYN);
+    free(DESTINATION_PORT_NUMBER_TCP_TAIL_SYN);
+    free(PORT_NUMBER_TCP_PRE_PROBING_PHASES);
+    free(PORT_NUMBER_TCP_POST_PROBING_PHASES);
+    free(SIZE_OF_UDP_PAYLOAD_IN_BYTES);
+    free(INTER_MEASUREMENT_TIME_IN_SECONDS);
+    free(NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN);
+    free(TTL_FOR_UDP_PACKETS);
+
+    // Iterate through the JSON object's key-value pairs
     cJSON* current_item = root->child;
     while (current_item != NULL) {
         const char* key = current_item->string;
