@@ -37,6 +37,7 @@ void asign_from_json(char* jsonFile) {
 
     // Parse the JSON data
     json_dict = cJSON_Parse(json_data);
+    printf("Dict: \n%s \n", cJSON_Print(json_dict));
     free(json_data);
 
     if (json_dict == NULL) {
