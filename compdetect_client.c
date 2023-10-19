@@ -213,6 +213,7 @@ int main(int argc, char *argv[]) {
 		printf("Error: Incorrect number of arguments");
 		return EXIT_FAILURE;
 	}
+	asign_from_json(argv[1]);
 	//TCP and JSON
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
