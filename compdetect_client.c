@@ -22,7 +22,7 @@ char* NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN;
 char* TTL_FOR_UDP_PACKETS;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
-void parseJsonConfig(const char* jsonFile) {
+void asign_from_json(char* jsonFile) {
 	cJSON *root;
 	FILE *file = fopen(jsonFile, "r");
     if (!file) {
