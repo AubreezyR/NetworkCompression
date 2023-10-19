@@ -116,73 +116,63 @@ void send_udp_packets(int payload_type) {
 
 void send_udp_packets(int packet_type) {
     int s;
-   	int status;
-   	struct addrinfo hints;
-   	struct addrinfo *servinfo;
-   
+    int status;
+    struct addrinfo hints;
+    struct addrinfo *servinfo;
+
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
+    hints.ai_family = AF_UNSPEC; // IPv4 or v6
+    hints.ai_socktype = SOCK_DGRAM; // Use UDP
+    hints.ai_flags = AI_PASSIVE; // Assign local host IP address to socket
 
-    if((status = getaddrinfo("192.168.128.3", "8765", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
-		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
-		exit(1);
+    if ((status = getaddrinfo("192.168.128.3", "8765", &hints, &servinfo) != 0)) {
+        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        exit(1);
     }
-   	//set up socket
-   	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-   	//bind socket to port
-   	/*
-   	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
-   		perror("TCP socket bind fail");
-   		exit(1);
-   	}*/
-   	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
-   		perror("Connect error");
-   		close(s);
-   	}
 
-   	
+    // Set up socket
+    s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 
-   // Create the packet
-   char packet_low[100]; // Declare a character array
-   char packet_high[100];
-   
-   // Fill the string with null characters
-   memset(packet_low, '0', sizeof(packet_low));
+    // Create the packet
+    char packet_low[100];
+    char packet_high[100];
 
-   // Open /dev/urandom as a source of randomness if we are doing a high packet
-	   int urandom_fd = open("/dev/urandom", O_RDONLY);
-	   if (urandom_fd == -1) {
-	       perror("open /dev/urandom");
-	       exit(1);
-	   }
+    // Fill the string with null characters
+    memset(packet_low, '0', sizeof(packet_low));
 
-	   // Read random data from /dev/urandom to replace null characters
-	   if (read(urandom_fd, packet_high, sizeof(packet_high)) == -1) {
-	       perror("read /dev/urandom");
-	       close(urandom_fd);
-	       exit(1);
-	   }
+    // Open /dev/urandom as a source of randomness if we are doing a high packet
+    int urandom_fd = open("/dev/urandom", O_RDONLY);
+    if (urandom_fd == -1) {
+        perror("open /dev/urandom");
+        exit(1);
+    }
 
-	   close(urandom_fd);
+    // Read random data from /dev/urandom to replace null characters
+    if (read(urandom_fd, packet_high, sizeof(packet_high)) == -1) {
+        perror("read /dev/urandom");
+        close(urandom_fd);
+        exit(1);
+    }
 
-   // Send the data to the server
-   if (sendto(s, packet_low, strlen(packet_low), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-       perror("sendto");
-       exit(1);
-   }
-   sleep(WAIT_TIME);
-   // Send the data to the server
-   if (sendto(s, packet_high, strlen(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-       perror("sendto");
-       exit(1);
-   }
+    close(urandom_fd);
 
-   freeaddrinfo(servinfo);
-   close(s);
+    // Send the data to the server
+    if (sendto(s, packet_low, sizeof(packet_low), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+        perror("sendto");
+        exit(1);
+    }
+    sleep(WAIT_TIME);
 
+    // Send the data to the server
+    if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+        perror("sendto");
+        exit(1);
+    }
+
+    freeaddrinfo(servinfo);
+    close(s);
 }
+
 
 
 int main(int argc, char *argv[]) {
