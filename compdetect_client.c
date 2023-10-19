@@ -37,27 +37,12 @@ void asign_from_json(char* jsonFile) {
 
     // Parse the JSON data
     json_dict = cJSON_Parse(json_data);
-    printf("Dict: \n%s \n", cJSON_Print(json_dict));
     free(json_data);
 
     if (json_dict == NULL) {
         perror("Failed to parse JSON data");
         exit(1);
     }
-    // Access values from the JSON object and store them as variables
-    /*
-    SERVER_IP_ADDRESS = ;
-    SOURCE_PORT_NUMBER_UDP = ;
-    DESTINATION_PORT_NUMBER_UDP = cJSON_GetObjectItem(root, "DestinationPortNumberUDP")->valuestring;
-    DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPHeadSYN")->valuestring;
-    DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPTailSYN")->valuestring;
-    PORT_NUMBER_TCP_PRE_PROBING_PHASES = cJSON_GetObjectItem(root, "PortNumberTCP_PreProbingPhases")->valuestring;
-    PORT_NUMBER_TCP_POST_PROBING_PHASES = cJSON_GetObjectItem(root, "PortNumberTCP_PostProbingPhases")->valuestring;
-    SIZE_OF_UDP_PAYLOAD_IN_BYTES = cJSON_GetObjectItem(root, "SizeOfUDPPayloadInBytes")->valuestring;
-    INTER_MEASUREMENT_TIME_IN_SECONDS = cJSON_GetObjectItem(root, "InterMeasurementTimeInSeconds")->valuestring;
-    NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = cJSON_GetObjectItem(root, "NumberOfUDPPacketsInPacketTrain")->valuestring;
-    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;*/   
-    
 }
 
 void send_json_over_tcp(char* jsonFile) {
@@ -67,15 +52,16 @@ void send_json_over_tcp(char* jsonFile) {
    	struct addrinfo *servinfo;
    	char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
    	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
-   	char* port = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PreProbingPhases")->valuestring;
+   	int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PreProbingPhases")->valueint;
+   	char port[5];
+   	sprintf(port, "%d", portInt);
    	
    	   	
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
-	printf("port: %s\n",port);
-    if((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo(ip, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
