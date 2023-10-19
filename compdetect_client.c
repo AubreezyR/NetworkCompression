@@ -9,17 +9,17 @@
 #include <fcntl.h>
 #include "cJSON.h"
 //later this info comes from config file
-#define SERVER_IP_ADDRESS ""
-#define SOURCE_PORT_NUMBER_UDP 0
-#define DESTINATION_PORT_NUMBER_UDP 0
-#define DESTINATION_PORT_NUMBER_TCP_HEAD_SYN 0
-#define DESTINATION_PORT_NUMBER_TCP_TAIL_SYN 0
-#define PORT_NUMBER_TCP_PRE_PROBING_PHASES 0
-#define PORT_NUMBER_TCP_POST_PROBING_PHASES 0
-#define SIZE_OF_UDP_PAYLOAD_IN_BYTES 0
-#define INTER_MEASUREMENT_TIME_IN_SECONDS 0 
-#define NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN 0 
-#define TTL_FOR_UDP_PACKETS     
+char* SERVER_IP_ADDRESS;
+char* SOURCE_PORT_NUMBER_UDP;
+char* DESTINATION_PORT_NUMBER_UDP;
+char* DESTINATION_PORT_NUMBER_TCP_HEAD_SYN;
+char* DESTINATION_PORT_NUMBER_TCP_TAIL_SYN;
+char* PORT_NUMBER_TCP_PRE_PROBING_PHASES;
+char* PORT_NUMBER_TCP_POST_PROBING_PHASES;
+char* SIZE_OF_UDP_PAYLOAD_IN_BYTES;
+char* INTER_MEASUREMENT_TIME_IN_SECONDS;
+char* NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN;
+char* TTL_FOR_UDP_PACKETS;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
 void asign_from_json(char* jsonFile){
@@ -58,71 +58,52 @@ void asign_from_json(char* jsonFile){
     }
 
  // Extract and assign values from the parsed JSON
-   cJSON *config = cJSON_GetObjectItem(json, "config");
-   if (config !=  NULL) {
-       cJSON *item;
-
-       item = cJSON_GetObjectItem(config, "ServerIPAddress");
-       if (item && item->type == cJSON_String) {
-           snprintf(SERVER_IP_ADDRESS, sizeof(SERVER_IP_ADDRESS), "%s", item->valuestring);
-       }
-
-       item = cJSON_GetObjectItem(config, "SourcePortNumberUDP");
-       if(item && item->type == cJSON_Number) {
-           SOURCE_PORT_NUMBER_UDP  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "DestinationPortNumberUDP");
-       if (item && item->type == cJSON_Number) {
-           DESTINATION_PORT_NUMBER_UDP  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "DestinationPortNumberTCPHeadSYN");
-       if (item && item->type == cJSON_Number) {
-           DESTINATION_PORT_NUMBER_TCP_HEAD_SYN item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "DestinationPortNumberTCPTailSYN");
-       if (item && item->type == cJSON_Number) {
-           DESTINATION_PORT_NUMBER_TCP_TAIL_SYN  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "PortNumberTCP_PreProbingPhases");
-       if (item && item->type == cJSON_Number) {
-           PORT_NUMBER_TCP_PRE_PROBING_PHASES  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "PortNumberTCP_PostProbingPhases");
-       if (item && item->type == cJSON_Number) {
-           PORT_NUMBER_TCP_POST_PROBING_PHASES  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "SizeOfUDPPayloadInBytes");
-       if (item && item->type == cJSON_Number) {
-           SIZE_OF_UDP_PAYLOAD_IN_BYTES  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "InterMeasurementTimeInSeconds");
-       if (item && item->type == cJSON_Number) {
-           INTER_MEASUREMENT_TIME_IN_SECONDS  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "NumberOfUDPPacketsInPacketTrain");
-       if (item && item->type == cJSON_Number) {
-           NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN  item->valueint;
-       }
-
-       item = cJSON_GetObjectItem(config, "TTLForUDPPackets");
-       if (item && item->type == cJSON_Number) {
-           TTL_FOR_UDP_PACKETS  item->valueint;
-       }
-   }
-
-    cJSON_Delete(json);
-    free(json_buffer);
-
-
+   // Iterate through the JSON object's key-value pairs and store as char*
+        cJSON* current_item = json->child;
+        while (current_item != NULL) {
+            const char* key = current_item->string;
+            cJSON* value = current_item;
     
+            if (strcmp(key, "ServerIPAddress") == 0) {
+            	SERVER_IP_ADDRESS = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "SourcePortNumberUDP") == 0) {
+                SOURCE_PORT_NUMBER_UDP = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "DestinationPortNumberUDP") == 0) {
+                DESTINATION_PORT_NUMBER_UDP = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "DestinationPortNumberTCPHeadSYN") == 0) {
+                DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "DestinationPortNumberTCPTailSYN") == 0) {
+                DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "PortNumberTCP_PreProbingPhases") == 0) {
+                PORT_NUMBER_TCP_PRE_PROBING_PHASES = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "PortNumberTCP_PostProbingPhases") == 0) {
+                PORT_NUMBER_TCP_POST_PROBING_PHASES = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "SizeOfUDPPayloadInBytes") == 0) {
+                SIZE_OF_UDP_PAYLOAD_IN_BYTES = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "InterMeasurementTimeInSeconds") == 0) {
+                INTER_MEASUREMENT_TIME_IN_SECONDS = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "NumberOfUDPPacketsInPacketTrain") == 0) {
+                NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = strdup(value->valuestring);
+            }
+            else if (strcmp(key, "TTLForUDPPackets") == 0) {
+                TTL_FOR_UDP_PACKETS = strdup(value->valuestring);
+            }
+    
+            current_item = current_item->next;
+        }
+    
+        // Clean up cJSON objects and free the JSON data string
+        cJSON_Delete(json);
+        
 }
 
 void send_json_over_tcp(char* jsonFile) {
@@ -212,7 +193,7 @@ void send_udp_packets(int packet_type) {
         perror("sendto");
         exit(1);
     }
-    sleep(INTER_MEASUREMENT_TIME_IN_SECONDS);
+    sleep(atoi(INTER_MEASUREMENT_TIME_IN_SECONDS));
 
     // Send the data to the server
     if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
