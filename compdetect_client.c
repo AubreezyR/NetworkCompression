@@ -9,28 +9,135 @@
 #include <fcntl.h>
 #include "cJSON.h"
 //later this info comes from config file
-#define SERVER_IP "192.168.128.3" 
-#define SERVER_TCP_PORT 8080     
-#define SERVER_UDP_PORT 8765  
-#define SOURCE_PORT_UDP 9876
-#define PACKET_SIZE 1400     
-#define PACKET_COUNT 5      
-#define THRESHOLD 100
-#define WAIT_TIME 1000      
+#define SERVER_IP_ADDRESS ""
+#define SOURCE_PORT_NUMBER_UDP 0
+#define DESTINATION_PORT_NUMBER_UDP 0
+#define DESTINATION_PORT_NUMBER_TCP_HEAD_SYN 0
+#define DESTINATION_PORT_NUMBER_TCP_TAIL_SYN 0
+#define PORT_NUMBER_TCP_PRE_PROBING_PHASES 0
+#define PORT_NUMBER_TCP_POST_PROBING_PHASES 0
+#define SIZE_OF_UDP_PAYLOAD_IN_BYTES 0
+#define INTER_MEASUREMENT_TIME_IN_SECONDS 0 
+#define NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN 0 
+#define TTL_FOR_UDP_PACKETS     
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
+
+void asign_from_json(char* jsonFile){
+	FILE *json_file = fopen(jsonFile, "r");
+    if (json_file == NULL) {
+        perror("Error opening JSON file");	
+        exit(EXIT_FAILURE);
+    }
+    // Get the file size
+    fseek(json_file, 0, SEEK_END);
+    long file_size = ftell(json_file);
+    fseek(json_file, 0, SEEK_SET);
+
+    // Read the JSON data into a buffer
+    char *json_buffer = (char *)malloc(file_size + 1);
+    if (!json_buffer) {
+        perror("Memory allocation error");
+        fclose(json_file);
+        exit(1);
+    }
+    fread(json_buffer, 1, file_size, json_file);
+    json_buffer[file_size] = '\0'; // Null-terminate the string
+
+    fclose(json_file);
+
+    // Parse the JSON data
+    cJSON *json = cJSON_Parse(json_buffer);
+    if (!json) {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL) {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        cJSON_Delete(json);
+        free(json_buffer);
+        exit(1);
+    }
+
+ // Extract and assign values from the parsed JSON
+   cJSON *config = cJSON_GetObjectItem(json, "config");
+   if (config !=  NULL) {
+       cJSON *item;
+
+       item = cJSON_GetObjectItem(config, "ServerIPAddress");
+       if (item && item->type == cJSON_String) {
+           snprintf(SERVER_IP_ADDRESS, sizeof(SERVER_IP_ADDRESS), "%s", item->valuestring);
+       }
+
+       item = cJSON_GetObjectItem(config, "SourcePortNumberUDP");
+       if(item && item->type == cJSON_Number) {
+           SOURCE_PORT_NUMBER_UDP  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "DestinationPortNumberUDP");
+       if (item && item->type == cJSON_Number) {
+           DESTINATION_PORT_NUMBER_UDP  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "DestinationPortNumberTCPHeadSYN");
+       if (item && item->type == cJSON_Number) {
+           DESTINATION_PORT_NUMBER_TCP_HEAD_SYN item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "DestinationPortNumberTCPTailSYN");
+       if (item && item->type == cJSON_Number) {
+           DESTINATION_PORT_NUMBER_TCP_TAIL_SYN  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "PortNumberTCP_PreProbingPhases");
+       if (item && item->type == cJSON_Number) {
+           PORT_NUMBER_TCP_PRE_PROBING_PHASES  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "PortNumberTCP_PostProbingPhases");
+       if (item && item->type == cJSON_Number) {
+           PORT_NUMBER_TCP_POST_PROBING_PHASES  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "SizeOfUDPPayloadInBytes");
+       if (item && item->type == cJSON_Number) {
+           SIZE_OF_UDP_PAYLOAD_IN_BYTES  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "InterMeasurementTimeInSeconds");
+       if (item && item->type == cJSON_Number) {
+           INTER_MEASUREMENT_TIME_IN_SECONDS  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "NumberOfUDPPacketsInPacketTrain");
+       if (item && item->type == cJSON_Number) {
+           NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN  item->valueint;
+       }
+
+       item = cJSON_GetObjectItem(config, "TTLForUDPPackets");
+       if (item && item->type == cJSON_Number) {
+           TTL_FOR_UDP_PACKETS  item->valueint;
+       }
+   }
+
+    cJSON_Delete(json);
+    free(json_buffer);
+
+
+    
+}
 
 void send_json_over_tcp(char* jsonFile) {
     int s;
    	int status;
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
-   
+   	
+   	   	
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
 
-    if((status = getaddrinfo("192.168.128.3", "8080", &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo(SERVER_IP_ADDRESS, PORT_NUMBER_TCP_PRE_PROBING_PHASES, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
@@ -57,62 +164,6 @@ void send_json_over_tcp(char* jsonFile) {
    	close(s);   	
    	
 }
-/*
-void send_udp_packets(int payload_type) {
-    int sockfd;
-    struct sockaddr_in server_addr , client_addr;
-	char packet[PACKET_SIZE];
-	
-    // Create a UDP socket
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0) {
-        perror("UDP socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-    
-	memset(&server_addr, 0, sizeof(server_addr));
-    
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_UDP_PORT);
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
-
-    // Set the source port for UDP
-    memset(&client_addr, 0, sizeof(client_addr));
-    
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(SOURCE_PORT_UDP); // Set the desired source UDP port
-
-    // Bind the socket to the specified source port for UDP
-    if (bind(sockfd, (struct sockaddr *)&client_addr, sizeof(client_addr)) < 0) {
-        perror("Binding source port for UDP failed");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-	//Set the DOnt Fragment flag in IP header
-	int enable = 1;
-    if (setsockopt(sockfd, IPPROTO_IP, IP_MTU_DISCOVER, &enable, sizeof(enable)) < 0) {
-        perror("Failed to set DF flag");
-        exit(EXIT_FAILURE);
-    }
-
-    // Send UDP packets (low entropy data)
-    for (int i = 0; i < PACKET_COUNT; i++) {
-    	memset(packet, 0, sizeof(packet)); // Initialize packet with all 0's
-    	
-    	if(payload_type == 1){
-		    //Fill packet wil random data
-		    FILE *urandom = fopen("/dev/urandom", "rb");
-		    fread(packet, 1, sizeof(packet), urandom);
-		    fclose(urandom);
-	    }
-	    sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	    sleep(15000);
-    }
-
-    close(sockfd);
-}*/
-
 
 void send_udp_packets(int packet_type) {
     int s;
@@ -161,7 +212,7 @@ void send_udp_packets(int packet_type) {
         perror("sendto");
         exit(1);
     }
-    sleep(WAIT_TIME);
+    sleep(INTER_MEASUREMENT_TIME_IN_SECONDS);
 
     // Send the data to the server
     if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
