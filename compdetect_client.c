@@ -30,15 +30,9 @@ void parseJsonConfig(const char* jsonFile) {
         exit(EXIT_FAILURE);
     }
 
-    // Read the JSON data from the file
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char* json_data = (char*)malloc(file_size + 1);
-    fread(json_data, 1, file_size, file);
+    char* json_data = (char*)malloc(1042);
     fclose(file);
-    json_data[file_size] = '\0';
+    json_data[1042] = '\0';
 
     // Parse the JSON data
     cJSON* root = cJSON_Parse(json_data);
