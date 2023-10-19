@@ -65,7 +65,8 @@ void send_json_over_tcp(char* jsonFile) {
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
    	char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
-   	char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
+   	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
+   	char* port = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PreProbingPhases")->valuestring;
    	
    	   	
     memset(&hints, 0, sizeof hints);
@@ -111,6 +112,7 @@ void send_udp_packets(int packet_type) {
     hints.ai_family = AF_UNSPEC; // IPv4 or v6
     hints.ai_socktype = SOCK_DGRAM; // Use UDP
     hints.ai_flags = AI_PASSIVE; // Assign local host IP address to socket
+    int sleep_time = cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint;
 
     if ((status = getaddrinfo("192.168.128.3", "8765", &hints, &servinfo) != 0)) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
@@ -148,7 +150,7 @@ void send_udp_packets(int packet_type) {
         perror("sendto");
         exit(1);
     }
-    //sleep(atoi(INTER_MEASUREMENT_TIME_IN_SECONDS));
+    sleep(sleep_time);
 
     // Send the data to the server
     if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
