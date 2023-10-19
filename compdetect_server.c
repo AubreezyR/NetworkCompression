@@ -14,40 +14,9 @@
 #define PACKET_COUNT 10      
 #define THRESHOLD 100
 
-cJSON*json_dict;
+//cJSON*json_dict;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
-void asign_from_json(char* jsonFile) {
-
-	FILE *file = fopen(jsonFile, "r");
-    if (!file) {
-        perror("Failed to open the JSON file");
-        exit(1);
-    }
-
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *json_data = (char *)malloc(file_size + 1);
-    if (!json_data) {
-        fclose(file);
-        perror("Memory allocation failed");
-        exit(1);
-    }
-
-    fread(json_data, 1, file_size, file);
-    fclose(file);
-    json_data[file_size] = '\0';
-
-    // Parse the JSON data
-    json_dict = cJSON_Parse(json_data);
-    free(json_data);
-
-    if (json_dict == NULL) {
-        perror("Failed to parse JSON data");
-        exit(1);
-    }
     // Access values from the JSON object and store them as variables
     /*
     SERVER_IP_ADDRESS = ;
@@ -60,11 +29,10 @@ void asign_from_json(char* jsonFile) {
     SIZE_OF_UDP_PAYLOAD_IN_BYTES = cJSON_GetObjectItem(root, "SizeOfUDPPayloadInBytes")->valuestring;
     INTER_MEASUREMENT_TIME_IN_SECONDS = cJSON_GetObjectItem(root, "InterMeasurementTimeInSeconds")->valuestring;
     NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = cJSON_GetObjectItem(root, "NumberOfUDPPacketsInPacketTrain")->valuestring;
-    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;*/   
-    
-}
+    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;*/      
 
-void receive_json_over_tcp() {
+
+cJSON* receive_json_over_tcp(char* port) {
 	int s, new_s;
 	int status;
 	struct addrinfo hints;
@@ -72,14 +40,13 @@ void receive_json_over_tcp() {
     char json_buffer[1042];
     struct sockaddr_storage their_addr;
     socklen_t addr_size;
-    char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
-    char*  port = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PreP")->valuestring;
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
     hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
-    if((status = getaddrinfo(ip, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
@@ -115,8 +82,7 @@ void receive_json_over_tcp() {
 	// convert the json buffer to a dictionary
    	json_buffer[sizeof(json_buffer) - 1] = '\0';
    	cJSON* root = cJSON_Parse(json_buffer);
-  	char*  jsonString = cJSON_Print(root);
-   	printf("JSON DATA:\n%s\n", jsonString);
+  	return root;
 
 	freeaddrinfo(servinfo);
 	close(s);
@@ -124,7 +90,7 @@ void receive_json_over_tcp() {
     
 
 
-void receive_udp_packets() {
+void receive_udp_packets(char* port) {
     int sockfd;
     struct sockaddr_storage their_addr;
     socklen_t addr_size;
@@ -183,10 +149,13 @@ void receive_udp_packets() {
     close(sockfd);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	if(argc != 2){
+		perror("Error: Wrong number of args");
+	}
     // Call functions to receive JSON and UDP packets
     printf("starting connection...");
-    receive_json_over_tcp();
-    receive_udp_packets();
+    receive_json_over_tcp(argv[1]);
+    //receive_udp_packets(argv[1]);
     return 0;
 }
