@@ -23,84 +23,53 @@ char* TTL_FOR_UDP_PACKETS;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
 void parseJsonConfig(const char* jsonFile) {
-    // Check if the JSON file can be opened
-    FILE* file = fopen(jsonFile, "r");
-    if (file == NULL) {
-        perror("Error opening JSON file");
-        exit(EXIT_FAILURE);
+	cJSON *root;
+	FILE *file = fopen(jsonFile, "r");
+    if (!file) {
+        perror("Failed to open the JSON file");
+        exit(1);
     }
 
-    char* json_data = (char*)malloc(1042);
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *json_data = (char *)malloc(file_size + 1);
+    if (!json_data) {
+        fclose(file);
+        perror("Memory allocation failed");
+        exit(1);
+    }
+
+    fread(json_data, 1, file_size, file);
     fclose(file);
-    json_data[1042] = '\0';
+    json_data[file_size] = '\0';
 
     // Parse the JSON data
-    cJSON* root = cJSON_Parse(json_data);
-    if (root == NULL) {
-        fprintf(stderr, "Error parsing JSON data: %s\n", cJSON_GetErrorPtr());
-        free(json_data);
-        exit(EXIT_FAILURE);
-    }
-
-    // Free previously allocated memory
-    free(SERVER_IP_ADDRESS);
-    free(SOURCE_PORT_NUMBER_UDP);
-    free(DESTINATION_PORT_NUMBER_UDP);
-    free(DESTINATION_PORT_NUMBER_TCP_HEAD_SYN);
-    free(DESTINATION_PORT_NUMBER_TCP_TAIL_SYN);
-    free(PORT_NUMBER_TCP_PRE_PROBING_PHASES);
-    free(PORT_NUMBER_TCP_POST_PROBING_PHASES);
-    free(SIZE_OF_UDP_PAYLOAD_IN_BYTES);
-    free(INTER_MEASUREMENT_TIME_IN_SECONDS);
-    free(NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN);
-    free(TTL_FOR_UDP_PACKETS);
-
-    // Iterate through the JSON object's key-value pairs
-    cJSON* current_item = root->child;
-    while (current_item != NULL) {
-        const char* key = current_item->string;
-        cJSON* value = current_item;
-
-        if (strcmp(key, "ServerIPAddress") == 0) {
-            SERVER_IP_ADDRESS = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "SourcePortNumberUDP") == 0) {
-            SOURCE_PORT_NUMBER_UDP = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "DestinationPortNumberUDP") == 0) {
-            DESTINATION_PORT_NUMBER_UDP = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "DestinationPortNumberTCPHeadSYN") == 0) {
-            DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "DestinationPortNumberTCPTailSYN") == 0) {
-            DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "PortNumberTCP_PreProbingPhases") == 0) {
-            PORT_NUMBER_TCP_PRE_PROBING_PHASES = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "PortNumberTCP_PostProbingPhases") == 0) {
-            PORT_NUMBER_TCP_POST_PROBING_PHASES = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "SizeOfUDPPayloadInBytes") == 0) {
-            SIZE_OF_UDP_PAYLOAD_IN_BYTES = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "InterMeasurementTimeInSeconds") == 0) {
-            INTER_MEASUREMENT_TIME_IN_SECONDS = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "NumberOfUDPPacketsInPacketTrain") == 0) {
-            NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = strdup(value->valuestring);
-        }
-        else if (strcmp(key, "TTLForUDPPackets") == 0) {
-            TTL_FOR_UDP_PACKETS = strdup(value->valuestring);
-        }
-
-        current_item = current_item->next;
-    }
-
-    // Clean up cJSON objects and free the JSON data string
-    cJSON_Delete(root);
+    root = cJSON_Parse(json_data);
     free(json_data);
+
+    if (root == NULL) {
+        perror("Failed to parse JSON data");
+        exit(1);
+    }
+    // Access values from the JSON object and store them as variables
+    SERVER_IP_ADDRESS = cJSON_GetObjectItem(root, "ServerIPAddress")->valuestring;
+    SOURCE_PORT_NUMBER_UDP = cJSON_GetObjectItem(root, "SourcePortNumberUDP")->valuestring;
+    DESTINATION_PORT_NUMBER_UDP = cJSON_GetObjectItem(root, "DestinationPortNumberUDP")->valuestring;
+    DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPHeadSYN")->valuestring;
+    DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPTailSYN")->valuestring;
+    PORT_NUMBER_TCP_PRE_PROBING_PHASES = cJSON_GetObjectItem(root, "PortNumberTCP_PreProbingPhases")->valuestring;
+    PORT_NUMBER_TCP_POST_PROBING_PHASES = cJSON_GetObjectItem(root, "PortNumberTCP_PostProbingPhases")->valuestring;
+    SIZE_OF_UDP_PAYLOAD_IN_BYTES = cJSON_GetObjectItem(root, "SizeOfUDPPayloadInBytes")->valuestring;
+    INTER_MEASUREMENT_TIME_IN_SECONDS = cJSON_GetObjectItem(root, "InterMeasurementTimeInSeconds")->valuestring;
+    NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = cJSON_GetObjectItem(root, "NumberOfUDPPacketsInPacketTrain")->valuestring;
+    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;
+
+    cJSON_Delete(root);
+    
+
+    
 }
 
 void send_json_over_tcp(char* jsonFile) {
