@@ -22,88 +22,77 @@ char* NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN;
 char* TTL_FOR_UDP_PACKETS;
 //TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
-void asign_from_json(char* jsonFile){
-	FILE *json_file = fopen(jsonFile, "r");
-    if (json_file == NULL) {
-        perror("Error opening JSON file");	
+void asign_from_json(char* jsonFile) {
+    // Read the JSON data from the file
+    FILE* file = fopen(jsonFile, "r");
+    if (file == NULL) {
+        perror("Error opening JSON file");
         exit(EXIT_FAILURE);
     }
-    // Get the file size
-    fseek(json_file, 0, SEEK_END);
-    long file_size = ftell(json_file);
-    fseek(json_file, 0, SEEK_SET);
 
-    // Read the JSON data into a buffer
-    char *json_buffer = (char *)malloc(file_size + 1);
-    if (!json_buffer) {
-        perror("Memory allocation error");
-        fclose(json_file);
-        exit(1);
-    }
-    fread(json_buffer, 1, file_size, json_file);
-    json_buffer[file_size] = '\0'; // Null-terminate the string
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-    fclose(json_file);
+    char* json_data = (char*)malloc(file_size + 1);
+    fread(json_data, 1, file_size, file);
+    fclose(file);
+    json_data[file_size] = '\0';
 
     // Parse the JSON data
-    cJSON *json = cJSON_Parse(json_buffer);
-    if (!json) {
-        const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL) {
-            fprintf(stderr, "Error before: %s\n", error_ptr);
-        }
-        cJSON_Delete(json);
-        free(json_buffer);
-        exit(1);
+    cJSON* root = cJSON_Parse(json_data);
+    if (root == NULL) {
+        fprintf(stderr, "Error parsing JSON data: %s\n", cJSON_GetErrorPtr());
+        free(json_data);
+        exit(EXIT_FAILURE);
     }
 
- // Extract and assign values from the parsed JSON
-   // Iterate through the JSON object's key-value pairs and store as char*
-        cJSON* current_item = json->child;
-        while (current_item != NULL) {
-            const char* key = current_item->string;
-            cJSON* value = current_item;
-    
-            if (strcmp(key, "ServerIPAddress") == 0) {
-            	SERVER_IP_ADDRESS = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "SourcePortNumberUDP") == 0) {
-                SOURCE_PORT_NUMBER_UDP = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "DestinationPortNumberUDP") == 0) {
-                DESTINATION_PORT_NUMBER_UDP = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "DestinationPortNumberTCPHeadSYN") == 0) {
-                DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "DestinationPortNumberTCPTailSYN") == 0) {
-                DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "PortNumberTCP_PreProbingPhases") == 0) {
-                PORT_NUMBER_TCP_PRE_PROBING_PHASES = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "PortNumberTCP_PostProbingPhases") == 0) {
-                PORT_NUMBER_TCP_POST_PROBING_PHASES = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "SizeOfUDPPayloadInBytes") == 0) {
-                SIZE_OF_UDP_PAYLOAD_IN_BYTES = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "InterMeasurementTimeInSeconds") == 0) {
-                INTER_MEASUREMENT_TIME_IN_SECONDS = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "NumberOfUDPPacketsInPacketTrain") == 0) {
-                NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = strdup(value->valuestring);
-            }
-            else if (strcmp(key, "TTLForUDPPackets") == 0) {
-                TTL_FOR_UDP_PACKETS = strdup(value->valuestring);
-            }
-    
-            current_item = current_item->next;
+    // Iterate through the JSON object's key-value pairs and store as char*
+    cJSON* current_item = root->child;
+    while (current_item != NULL) {
+        const char* key = current_item->string;
+        cJSON* value = current_item;
+
+        if (strcmp(key, "ServerIPAddress") == 0) {
+            SERVER_IP_ADDRESS = strdup(value->valuestring);
         }
-    
-        // Clean up cJSON objects and free the JSON data string
-        cJSON_Delete(json);
-        
+        else if (strcmp(key, "SourcePortNumberUDP") == 0) {
+            SOURCE_PORT_NUMBER_UDP = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "DestinationPortNumberUDP") == 0) {
+            DESTINATION_PORT_NUMBER_UDP = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "DestinationPortNumberTCPHeadSYN") == 0) {
+            DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "DestinationPortNumberTCPTailSYN") == 0) {
+            DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "PortNumberTCP_PreProbingPhases") == 0) {
+            PORT_NUMBER_TCP_PRE_PROBING_PHASES = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "PortNumberTCP_PostProbingPhases") == 0) {
+            PORT_NUMBER_TCP_POST_PROBING_PHASES = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "SizeOfUDPPayloadInBytes") == 0) {
+            SIZE_OF_UDP_PAYLOAD_IN_BYTES = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "InterMeasurementTimeInSeconds") == 0) {
+            INTER_MEASUREMENT_TIME_IN_SECONDS = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "NumberOfUDPPacketsInPacketTrain") == 0) {
+            NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = strdup(value->valuestring);
+        }
+        else if (strcmp(key, "TTLForUDPPackets") == 0) {
+            TTL_FOR_UDP_PACKETS = strdup(value->valuestring);
+        }
+
+        current_item = current_item->next;
+    }
+
+    // Clean up cJSON objects and free the JSON data string
+    cJSON_Delete(root);
+    free(json_data);
 }
 
 void send_json_over_tcp(char* jsonFile) {
