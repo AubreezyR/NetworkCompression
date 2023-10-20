@@ -101,7 +101,7 @@ void send_udp_packets() {
     int sleep_time = cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint;
     char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
    	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
-   	int portInt = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valueint;
+   	int portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberUDP")->valueint;
    	char port[5];
    	sprintf(port, "%d", portInt);
 
@@ -137,17 +137,22 @@ void send_udp_packets() {
     close(urandom_fd);
 
     // Send the data to the server
+   // printf("sending low entropy...");
+   printf("Send info: Ip: %s\n Port: %s\n",ip, port);
     if (sendto(s, packet_low, sizeof(packet_low), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
         perror("sendto");
         exit(1);
     }
+    printf("low entropy sent, now sleeping for 15...");
     sleep(sleep_time);
 
     // Send the data to the server
+   // printf("sending high entropy...");
     if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
         perror("sendto");
         exit(1);
     }
+   // printf("high entropy sent");
 
     freeaddrinfo(servinfo);
     close(s);
