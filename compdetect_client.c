@@ -88,7 +88,7 @@ void send_json_over_tcp(char* jsonFile) {
    	
 }
 
-void send_udp_packets(int packet_type) {
+void send_udp_packets() {
     int s;
     int status;
     struct addrinfo hints;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
 	printf("JSON sent, Sending low packets...");
-	//send_udp_packets(0);
+	send_udp_packets();
 	printf("low packets sent, waiting 15 secs....");
 	
 	// recieve from server if there was compression
