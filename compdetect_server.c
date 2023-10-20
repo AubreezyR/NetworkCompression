@@ -14,23 +14,7 @@
 #define PACKET_COUNT 10      
 #define THRESHOLD 100
 
-//cJSON*json_dict;
-//TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
-
-    // Access values from the JSON object and store them as variables
-    /*
-    SERVER_IP_ADDRESS = ;
-    SOURCE_PORT_NUMBER_UDP = ;
-    DESTINATION_PORT_NUMBER_UDP = cJSON_GetObjectItem(root, "DestinationPortNumberUDP")->valuestring;
-    DESTINATION_PORT_NUMBER_TCP_HEAD_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPHeadSYN")->valuestring;
-    DESTINATION_PORT_NUMBER_TCP_TAIL_SYN = cJSON_GetObjectItem(root, "DestinationPortNumberTCPTailSYN")->valuestring;
-    PORT_NUMBER_TCP_PRE_PROBING_PHASES = cJSON_GetObjectItem(root, "PortNumberTCP_PreProbingPhases")->valuestring;
-    PORT_NUMBER_TCP_POST_PROBING_PHASES = cJSON_GetObjectItem(root, "PortNumberTCP_PostProbingPhases")->valuestring;
-    SIZE_OF_UDP_PAYLOAD_IN_BYTES = cJSON_GetObjectItem(root, "SizeOfUDPPayloadInBytes")->valuestring;
-    INTER_MEASUREMENT_TIME_IN_SECONDS = cJSON_GetObjectItem(root, "InterMeasurementTimeInSeconds")->valuestring;
-    NUMBER_OF_UDP_PACKETS_IN_PACKET_TRAIN = cJSON_GetObjectItem(root, "NumberOfUDPPacketsInPacketTrain")->valuestring;
-    TTL_FOR_UDP_PACKETS = cJSON_GetObjectItem(root, "TTLForUDPPackets")->valuestring;*/      
-
+cJSON*json_dict;
 
 cJSON* receive_json_over_tcp(char* port) {
 	int s, new_s;
@@ -90,19 +74,22 @@ cJSON* receive_json_over_tcp(char* port) {
     
 
 
-void receive_udp_packets(char* port) {
+void receive_udp_packets() {
     int sockfd;
     struct sockaddr_storage their_addr;
     socklen_t addr_size;
     char buffer[1042];
-
     struct addrinfo hints, *res, *p;
-
+    char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
+    int portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberUDP")->valueint;
+   	char port[5];
+   	sprintf(port, "%d", portInt); 
+	
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET; // Use IPv4
     hints.ai_socktype = SOCK_DGRAM; // Use UDP
 
-    if (getaddrinfo("192.168.128.3", SERVER_UDP_PORT, &hints, &res) != 0) {
+    if (getaddrinfo(ip, port, &hints, &res) != 0) {
         perror("getaddrinfo");
         exit(1);
     }
@@ -132,7 +119,7 @@ void receive_udp_packets(char* port) {
 
     freeaddrinfo(res);
 
-    printf("Waiting for UDP packets on port %s...\n", SERVER_UDP_PORT);
+    printf("Waiting for UDP packets on port %s...\n", ip);
 
     while (1) {
         addr_size = sizeof their_addr;
@@ -155,7 +142,7 @@ int main(int argc, char* argv[]) {
 	}
     // Call functions to receive JSON and UDP packets
     printf("starting connection...");
-    receive_json_over_tcp(argv[1]);
-    //receive_udp_packets(argv[1]);
+    json_dict = receive_json_over_tcp(argv[1]);
+    receive_udp_packets();
     return 0;
 }
