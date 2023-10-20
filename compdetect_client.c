@@ -10,7 +10,6 @@
 #include "cJSON.h"
 //later this info comes from config file
 cJSON*json_dict;
-//TODO READ DATA FROM JSON INSTEAD OF HARDCODING IT
 
 void asign_from_json(char* jsonFile) {
 
@@ -100,8 +99,13 @@ void send_udp_packets(int packet_type) {
     hints.ai_socktype = SOCK_DGRAM; // Use UDP
     hints.ai_flags = AI_PASSIVE; // Assign local host IP address to socket
     int sleep_time = cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint;
+    char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
+   	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
+   	int portInt = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valueint;
+   	char port[5];
+   	sprintf(port, "%d", portInt);
 
-    if ((status = getaddrinfo("192.168.128.3", "8765", &hints, &servinfo) != 0)) {
+    if ((status = getaddrinfo(ip, port, &hints, &servinfo) != 0)) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         exit(1);
     }
