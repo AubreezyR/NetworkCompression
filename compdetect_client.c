@@ -130,7 +130,7 @@ void send_udp_packets() {
     }
 
 	//set TTL
-	int ttl_value = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valueint; // TTL value (change as needed)
+	int ttl_value = cJSON_GetObjectItem(json_dict, "TTLForUDPPackets")->valueint; // TTL value (change as needed)
 	if (setsockopt(s, IPPROTO_IP, IP_TTL, &ttl_value, sizeof(ttl_value)) == -1) {
 	    perror("setsockopt (TTL)");
 	    close(s);
