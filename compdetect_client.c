@@ -131,6 +131,19 @@ void send_udp_packets() {
 
     freeaddrinfo(servinfo);
 
+	//set TTL
+	int ttl_value = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valueint; // TTL value (change as needed)
+	if (setsockopt(s, IPPROTO_IP, IP_TTL, &ttl_value, sizeof(ttl_value)) == -1) {
+	    perror("setsockopt (TTL)");
+	    close(s);
+	    exit(1);
+	}
+	//set dont fragment
+	int df_flag = IP_PMTUDISC_DO; // Enable the DF flag
+	if (setsockopt(s, IPPROTO_IP, IP_MTU_DISCOVER, &df_flag, sizeof(df_flag)) == -1) {
+	    perror("setsockopt (DF)");
+	    exit(1);
+	}
     // Create the packet
     char packet_low[100];
     char packet_high[100];
