@@ -129,8 +129,6 @@ void send_udp_packets() {
         exit(1);
     }
 
-    freeaddrinfo(servinfo);
-
 	//set TTL
 	int ttl_value = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valueint; // TTL value (change as needed)
 	if (setsockopt(s, IPPROTO_IP, IP_TTL, &ttl_value, sizeof(ttl_value)) == -1) {
