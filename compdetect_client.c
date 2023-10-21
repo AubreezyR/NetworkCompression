@@ -100,7 +100,6 @@ void send_udp_packets() {
     hints.ai_flags = AI_PASSIVE; // Assign local host IP address to socket
     int sleep_time = cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint;
     char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
-   	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
    	int portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberUDP")->valueint;
    	char port[5];
    	sprintf(port, "%d", portInt);
@@ -112,6 +111,25 @@ void send_udp_packets() {
 
     // Set up socket
     s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+
+	// Specify the source port 
+    struct sockaddr_in source_addr;
+    source_addr.sin_family = AF_INET;
+    source_addr.sin_port = htons(cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valueint); // Set the desired source port
+    source_addr.sin_addr.s_addr = INADDR_ANY; // Use any available local IP address
+
+    if (bind(s, (struct sockaddr *)&source_addr, sizeof(source_addr)) == -1) {
+        perror("bind");
+        close(s);
+        exit(1);
+    }
+
+    if (connect(s, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+        perror("connect");
+        exit(1);
+    }
+
+    freeaddrinfo(servinfo);
 
     // Create the packet
     char packet_low[100];
