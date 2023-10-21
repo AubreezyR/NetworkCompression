@@ -140,7 +140,7 @@ void send_udp_packets() {
 	}
 	//Set the DOnt Fragment flag in IP header
 	int enable = 1;
-    if (setsockopt(s, IPPROTO_IP, IP_DONTFRAG, &enable, sizeof(enable)) < 0) {
+    if (setsockopt(s, IPPROTO_IP, IP_PMTUDISC_DO, &enable, sizeof(enable)) < 0) {
         perror("Failed to set DF flag");
         exit(EXIT_FAILURE);
     }
