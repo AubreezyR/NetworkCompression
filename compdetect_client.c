@@ -144,35 +144,37 @@ void send_udp_packets() {
 	    perror("setsockopt (DF)");
 	    exit(1);
 	}
+   int num_of_packets =  cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint;
+for(int i = 0; i < num_of_packets; i++){
     // Create the packet
-    char packet_low[100];
-    char packet_high[100];
+    char packet_low[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint];
+    char packet_high[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint];
 
     // Fill the string with null characters
     memset(packet_low, '0', sizeof(packet_low));
 
-    // Open /dev/urandom as a source of randomness if we are doing a high packet
+    // Open /dev/urandom as a source of randomness
     int urandom_fd = open("/dev/urandom", O_RDONLY);
     if (urandom_fd == -1) {
-        perror("open /dev/urandom");
-        exit(1);
+	perror("open /dev/urandom");
+	exit(1);
     }
 
-    // Read random data from /dev/urandom to replace null characters
+    // Read random data from /dev/urandom
     if (read(urandom_fd, packet_high, sizeof(packet_high)) == -1) {
-        perror("read /dev/urandom");
-        close(urandom_fd);
-        exit(1);
+	perror("read /dev/urandom");
+	close(urandom_fd);
+	exit(1);
     }
 
     close(urandom_fd);
 
-    // Send the data to the server
+   // Send the data to the server
    // printf("sending low entropy...");
    printf("Send info: Ip: %s\n Port: %s\n",ip, port);
     if (sendto(s, packet_low, sizeof(packet_low), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-        perror("sendto");
-        exit(1);
+	perror("sendto");
+	exit(1);
     }
     printf("low entropy sent, now sleeping for 15...");
     sleep(sleep_time);
@@ -180,9 +182,10 @@ void send_udp_packets() {
     // Send the data to the server
    // printf("sending high entropy...");
     if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-        perror("sendto");
-        exit(1);
+	perror("sendto");
+	exit(1);
     }
+}
    // printf("high entropy sent");
 
     freeaddrinfo(servinfo);
