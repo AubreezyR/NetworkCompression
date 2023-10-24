@@ -120,8 +120,8 @@ void receive_udp_packets() {
     freeaddrinfo(res);
 
     printf("Waiting for UDP packets on port %s...\n", ip);
-
-    while (1) {
+	int i = 0;
+    while (i < 5) {
         addr_size = sizeof their_addr;
         ssize_t num_bytes = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&their_addr, &addr_size);
         if (num_bytes < 0) {
@@ -131,6 +131,7 @@ void receive_udp_packets() {
 
         buffer[num_bytes] = '\0'; // Null-terminate the received data
         printf("Received: %s\n", buffer);
+        i++;
     }
 	freeaddrinfo(res);
     close(sockfd);
