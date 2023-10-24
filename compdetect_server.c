@@ -123,7 +123,7 @@ void receive_udp_packets() {
 	clock_t start_time, end_time;
 	double elapsed_time;
 	start_time = clock();
-    while (i < 5) {
+    while (i < (cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint) *2) {
         addr_size = sizeof their_addr;
         ssize_t num_bytes = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&their_addr, &addr_size);
         if (num_bytes < 0) {
@@ -132,7 +132,7 @@ void receive_udp_packets() {
         }
 
         buffer[num_bytes] = '\0'; // Null-terminate the received data
-        printf("Received: %s\n", buffer);
+        //printf("Received: %s\n", buffer);
         i++;
     }
     end_time = clock();
