@@ -88,7 +88,7 @@ void send_json_over_tcp(char* jsonFile) {
    	
 }
 
-void send_udp_packets() {
+void send_udp_packets(int payload_type) {
     int s;
     int status;
     struct addrinfo hints;
@@ -144,49 +144,41 @@ void send_udp_packets() {
 	    perror("setsockopt (DF)");
 	    exit(1);
 	}
-   int num_of_packets =  cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint;
-for(int i = 0; i < num_of_packets; i++){
-    // Create the packet
-    char packet_low[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint];
-    char packet_high[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint];
+	int num_of_packets =  cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint;
+	for(int i = 0; i < num_of_packets; i++){
+	    // Create the packet
+	    char packet[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint];
 
-    // Fill the string with null characters
-    memset(packet_low, '0', sizeof(packet_low));
+	    // Fill the string with null characters
+	    memset(packet, '0', sizeof(packet));
 
-    // Open /dev/urandom as a source of randomness
-    int urandom_fd = open("/dev/urandom", O_RDONLY);
-    if (urandom_fd == -1) {
-	perror("open /dev/urandom");
-	exit(1);
+	    // Open /dev/urandom as a source of randomness
+	    if(payload_type == 1){
+		    int urandom_fd = open("/dev/urandom", O_RDONLY);
+		    if (urandom_fd == -1) {
+				perror("open /dev/urandom");
+				exit(1);
+		    }
+
+		    // Read random data from /dev/urandom
+		    if (read(urandom_fd, packet, sizeof(packet)) == -1) {
+				perror("read /dev/urandom");
+				close(urandom_fd);
+				exit(1);
+		    }
+
+		    close(urandom_fd);
+	    }
+
+	   // Send the data to the server
+	   // printf("sending low entropy...");
+		printf("Send info: Ip: %s\n Port: %s\n",ip, port);
+	    if (sendto(s, packet, sizeof(packet), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+			perror("sendto");
+			exit(1);
+	    }
+
     }
-
-    // Read random data from /dev/urandom
-    if (read(urandom_fd, packet_high, sizeof(packet_high)) == -1) {
-	perror("read /dev/urandom");
-	close(urandom_fd);
-	exit(1);
-    }
-
-    close(urandom_fd);
-
-   // Send the data to the server
-   // printf("sending low entropy...");
-   printf("Send info: Ip: %s\n Port: %s\n",ip, port);
-    if (sendto(s, packet_low, sizeof(packet_low), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-	perror("sendto");
-	exit(1);
-    }
-    printf("low entropy sent, now sleeping for 15...");
-    sleep(sleep_time);
-
-    // Send the data to the server
-   // printf("sending high entropy...");
-    if (sendto(s, packet_high, sizeof(packet_high), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-	perror("sendto");
-	exit(1);
-    }
-}
-   // printf("high entropy sent");
 
     freeaddrinfo(servinfo);
     close(s);
@@ -205,9 +197,10 @@ int main(int argc, char *argv[]) {
 	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
 	printf("JSON sent, Sending low packets...");
-	send_udp_packets();
+	send_udp_packets(0);
 	printf("low packets sent, waiting 15 secs....");
-	
+	sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint);
+	send_udp_packets(1);
 	// recieve from server if there was compression
     
 	
