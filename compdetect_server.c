@@ -117,8 +117,6 @@ void receive_udp_packets() {
         break;  // Successfully bound the socket
     }
 
-    freeaddrinfo(res);
-
     printf("Waiting for UDP packets on port %s...\n", ip);
 	int i = 0;
     while (i < 5) {
