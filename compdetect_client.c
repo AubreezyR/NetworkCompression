@@ -172,7 +172,7 @@ void send_udp_packets(int payload_type) {
 
 	   // Send the data to the server
 	   // printf("sending low entropy...");
-		printf("Send info: Ip: %s\n Port: %s\n",ip, port);
+		//printf("Send info: Ip: %s\n Port: %s\n",ip, port);
 	    if (sendto(s, packet, sizeof(packet), 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
 			perror("sendto");
 			exit(1);
@@ -200,6 +200,7 @@ int main(int argc, char *argv[]) {
 	send_udp_packets(0);
 	printf("low packets sent, waiting 15 secs....");
 	sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint);
+	printf("sending high entropy");
 	send_udp_packets(1);
 	// recieve from server if there was compression
     
