@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <time.h>
 #include "cJSON.h"
 
 #define SERVER_TCP_PORT 7777   // TCP port to receive JSON data
@@ -119,6 +120,9 @@ void receive_udp_packets() {
 
     printf("Waiting for UDP packets on port %s...\n", ip);
 	int i = 0;
+	clock_t start_time, end_time;
+	double elapsed_time;
+	start_time = clock();
     while (i < 5) {
         addr_size = sizeof their_addr;
         ssize_t num_bytes = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&their_addr, &addr_size);
@@ -131,6 +135,9 @@ void receive_udp_packets() {
         printf("Received: %s\n", buffer);
         i++;
     }
+    end_time = clock();
+    elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    printf("total time for packet train: %f\n", elapsed_time);
 	freeaddrinfo(res);
     close(sockfd);
 }
