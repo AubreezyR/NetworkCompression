@@ -184,7 +184,66 @@ void send_udp_packets(int payload_type) {
     close(s);
 }
 
+void recieve_results(){
+	int s, new_s;
+	int status;
+	struct addrinfo hints;
+	struct addrinfo *servinfo;
+    char result_buffer[32];
+    struct sockaddr_storage their_addr;
+    socklen_t addr_size;
+    int portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberUDP")->valueint;
+    char port[5];
+    sprintf(port, "%d", portInt);
 
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    if((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
+		exit(1);
+    }
+	//set up socket
+	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+	//bind socket to port
+	if(bind(s, servinfo->ai_addr, servinfo->ai_addrlen)< 0){
+		perror("TCP socket bind fail");
+		close(s);
+		exit(1);
+	}
+	//listen for connection
+	if(listen(s, 10) < 0){
+		perror("listen error");
+		close(s);
+		exit(1);
+	}
+	
+	addr_size = sizeof(their_addr);
+	new_s = accept(s, (struct sockaddr *)&their_addr, &addr_size);
+
+	if(new_s < 0){
+		perror("Accept error");
+		close(s);
+		exit(1);
+	}
+	if(recv(new_s, result_buffer, sizeof(result_buffer), 0)< 0){
+		perror("recv error");
+		close(s);
+		exit(1);
+	}
+
+	//convert result back to int
+	int result = atoi(result_buffer);
+	if(result == 0){
+		printf("No compression dectected");
+	}else{
+		printf("compression detected: %d",result);
+	}
+	freeaddrinfo(servinfo);
+	close(s);
+}
 
 int main(int argc, char *argv[]) {
 	//error check

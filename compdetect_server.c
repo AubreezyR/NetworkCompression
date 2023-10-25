@@ -75,7 +75,7 @@ cJSON* receive_json_over_tcp(char* port) {
     
 
 
-void receive_udp_packets() {
+int receive_udp_packets() {
     int sockfd;
     struct sockaddr_storage their_addr;
     socklen_t addr_size;
@@ -120,10 +120,15 @@ void receive_udp_packets() {
 
     printf("Waiting for UDP packets on port %s...\n", ip);
 	int i = 0;
-	clock_t start_time, end_time;
-	double elapsed_time;
-	start_time = clock();
+	clock_t start_time_low, end_time_low,start_time_high, end_time_high;
+	double elapsed_time_low, elapsed_time_high;
+	start_time_low = clock();
     while (i < (cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint) *2) {
+    	if(i == cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint){
+    		end_time_low = clock();
+    		start_time_high = clock();
+    		
+    	}
         addr_size = sizeof their_addr;
         ssize_t num_bytes = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&their_addr, &addr_size);
         if (num_bytes < 0) {
@@ -134,13 +139,58 @@ void receive_udp_packets() {
         buffer[num_bytes] = '\0'; // Null-terminate the received data
         //printf("Received: %s\n", buffer);
         i++;
+        
     }
-    end_time = clock();
-    elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
-    printf("total time for packet train: %f\n", elapsed_time);
+    end_time_high = clock();
+    elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;
+    elapsed_time_high = (double)(end_time_high - start_time_high) / CLOCKS_PER_SEC;
+    printf("total time for packet train low : %f\n", elapsed_time_low);
+    printf("total time for packet train high : %f\n", elapsed_time_high);
 	freeaddrinfo(res);
     close(sockfd);
+
+    if(elapsed_time_high - elapsed_time_low > 100){
+    	return 1;
+    }else{
+    	return 0;
+    }
+    
 }
+
+
+void send_results(int compression){
+	int s;
+   	int status;
+   	struct addrinfo hints;
+   	struct addrinfo *servinfo;
+   	char buffer[32];
+   	//char* ip = 192.168.128.2;
+   	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
+   	int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PostProbingPhases")->valueint;
+   	char port[5];
+   	sprintf(port, "%d", portInt);
+   	
+   	   	
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
+    if((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
+		exit(1);
+    }
+   	//set up socket
+   	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+   	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
+   		perror("Connect error");
+   		close(s);
+   	}
+   	snprintf(buffer, sizeof(buffer), "%d", compression);
+    send(s, buffer, sizeof(buffer), 0);
+   	close(s);   	
+}
+
+
 
 int main(int argc, char* argv[]) {
 	if(argc != 2){
@@ -149,6 +199,7 @@ int main(int argc, char* argv[]) {
     // Call functions to receive JSON and UDP packets
     printf("starting connection...");
     json_dict = receive_json_over_tcp(argv[1]);
-    receive_udp_packets();
+    int compression = receive_udp_packets();
+    send_results(compression);
     return 0;
 }
