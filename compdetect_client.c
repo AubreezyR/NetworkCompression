@@ -262,7 +262,7 @@ int main(int argc, char *argv[]) {
 	printf("sending high entropy");
 	send_udp_packets(1);
 	// recieve from server if there was compression
-    
+    recieve_results();
 	
     return 0;
 }

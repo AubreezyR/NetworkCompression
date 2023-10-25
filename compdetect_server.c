@@ -149,7 +149,7 @@ int receive_udp_packets() {
 	freeaddrinfo(res);
     close(sockfd);
 
-    if(elapsed_time_high - elapsed_time_low > 100){
+    if(elapsed_time_high - elapsed_time_low > 0.1){
     	return 1;
     }else{
     	return 0;
