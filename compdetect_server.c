@@ -164,7 +164,7 @@ void send_results(int compression){
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
    	char buffer[32];
-   	//char* ip = 192.168.128.2;
+   	char* ip = "192.168.128.2";
    	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
    	int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PostProbingPhases")->valueint;
    	char port[5];
@@ -175,7 +175,7 @@ void send_results(int compression){
     hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
-    if((status = getaddrinfo(NULL, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+    if((status = getaddrinfo(ip, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
 		exit(1);
     }
