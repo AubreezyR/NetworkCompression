@@ -192,7 +192,7 @@ void recieve_results(){
     char result_buffer[32];
     struct sockaddr_storage their_addr;
     socklen_t addr_size;
-    int portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberUDP")->valueint;
+    int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PostProbingPhases")->valueint;
     char port[5];
     sprintf(port, "%d", portInt);
 
