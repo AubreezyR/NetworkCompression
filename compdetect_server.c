@@ -144,8 +144,6 @@ int receive_udp_packets() {
     end_time_high = clock();
     elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;
     elapsed_time_high = (double)(end_time_high - start_time_high) / CLOCKS_PER_SEC;
-    printf("total time for packet train low : %f\n", elapsed_time_low);
-    printf("total time for packet train high : %f\n", elapsed_time_high);
 	freeaddrinfo(res);
     close(sockfd);
 
@@ -165,7 +163,6 @@ void send_results(int compression){
    	struct addrinfo *servinfo;
    	char buffer[32];
    	char* ip = "192.168.128.2";
-   	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
    	int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PostProbingPhases")->valueint;
    	char port[5];
    	sprintf(port, "%d", portInt);
@@ -190,14 +187,12 @@ void send_results(int compression){
    	close(s);   	
 }
 
-
-
 int main(int argc, char* argv[]) {
 	if(argc != 2){
 		perror("Error: Wrong number of args");
 	}
     // Call functions to receive JSON and UDP packets
-    printf("starting connection...");
+    printf("starting connection...\n");
     json_dict = receive_json_over_tcp(argv[1]);
     int compression = receive_udp_packets();
     send_results(compression);

@@ -50,7 +50,6 @@ void send_json_over_tcp(char* jsonFile) {
    	struct addrinfo hints;
    	struct addrinfo *servinfo;
    	char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
-   	//char* port = cJSON_GetObjectItem(json_dict, "SourcePortNumberUDP")->valuestring;
    	int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PreProbingPhases")->valueint;
    	char port[5];
    	sprintf(port, "%d", portInt);
@@ -253,13 +252,9 @@ int main(int argc, char *argv[]) {
 	}
 	asign_from_json(argv[1]);
 	//TCP and JSON
-	printf("Sending JSON...");
 	send_json_over_tcp(argv[1]);
-	printf("JSON sent, Sending low packets...");
 	send_udp_packets(0);
-	printf("low packets sent, waiting 15 secs....");
 	sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint);
-	printf("sending high entropy");
 	send_udp_packets(1);
 	// recieve from server if there was compression
     recieve_results();
