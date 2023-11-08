@@ -94,7 +94,7 @@ int send_syn_packet() {
     ip_header->ip_dst.s_addr = sin.sin_addr.s_addr;;// fill main dest_addr with "192.168.128.3" 
 
     // Fill in the TCP header
-    tcp_header->th_sport = htons(6666);
+    tcp_header->th_sport = htons(1234);
     tcp_header->th_dport = htons(9999);
     tcp_header->th_seq = 0;
     tcp_header->th_ack = 0;
