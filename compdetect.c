@@ -312,10 +312,10 @@ int main(int argc, char* argv[]){
 
 
 	//-------SEND THE ENTROPY PACKET TRAINS
+	/*
 	clock_t start_time_low, end_time_low,start_time_high, end_time_high;
 	double elapsed_time_low, elapsed_time_high;
 
-	memset(datagram, 0, 4096);
 	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynHead,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	start_time_low = clock();
 
@@ -324,7 +324,7 @@ int main(int argc, char* argv[]){
 	memset(datagram, 0, 4096);
 	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynTail,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	end_time_low = clock();
-	elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;
+	elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;*/
 	    
     
 }
