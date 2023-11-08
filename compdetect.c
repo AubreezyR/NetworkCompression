@@ -298,7 +298,7 @@ int main(int argc, char* argv[]){
         printf("Warning: Cannot set HDRINCL in tail!\n");
         exit(1); // leave the program
     }
-
+    /*
     char datagram[4096];
 
     struct ipheader *iph = (struct ipheader *)datagram;
@@ -306,13 +306,13 @@ int main(int argc, char* argv[]){
     // of the datagram
     struct tcpheader *tcph = (struct tcpheader *)datagram + sizeof(struct ipheader);
     // make variable to hold SYN head address/port information   
-    /* zero out the buffer */
+    
     memset(datagram, 0, 4096);
 	//TODO setup udp payload send syn adn udps
 
 
 	//-------SEND THE ENTROPY PACKET TRAINS
-	/*
+	
 	clock_t start_time_low, end_time_low,start_time_high, end_time_high;
 	double elapsed_time_low, elapsed_time_high;
 
@@ -324,7 +324,7 @@ int main(int argc, char* argv[]){
 	memset(datagram, 0, 4096);
 	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynTail,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	end_time_low = clock();
-	elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;*/
-	    
+	elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;
+	    */
     
 }
