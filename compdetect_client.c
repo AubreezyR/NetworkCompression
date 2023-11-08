@@ -66,15 +66,6 @@ void send_json_over_tcp(char* jsonFile) {
    	//set up socket
    	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
    	
-	//allow the socket to reuse the same port when executing the program
-	// multiple times
-	int val = 1;
-	int setsock = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&val, sizeof(val));
-	if(setsock < 0)
-	{
-		perror("setsockopt error\n");
-		exit(EXIT_FAILURE);
-	}
    	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
    		perror("Connect error");
    		close(s);
