@@ -271,7 +271,7 @@ int main(int argc, char* argv[]){
     //open sockets
 
     //head
-    int rawSockSYNHead = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
+    int rawSockSYNHead = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (rawSockSYNHead < 0)
     {
         printf("Unable to create a socket\n");
@@ -286,7 +286,7 @@ int main(int argc, char* argv[]){
     }
  
     //tail
-    int rawSockSYNTail = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
+    int rawSockSYNTail = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (rawSockSYNTail < 0)
     {
         printf("Unable to create tail socket\n");
