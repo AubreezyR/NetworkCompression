@@ -12,8 +12,6 @@
 #include <netinet/tcp.h>
 #include <sys/time.h>
 #include "cJSON.h"
-#include <fcntl.h>
-#include <time.h>
 
 cJSON*json_dict;
 
