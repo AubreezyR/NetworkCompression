@@ -79,8 +79,11 @@ void send_json_over_tcp(char* jsonFile) {
     }
     char buffer[1024];
     size_t bytesRead;
+    printf("sending json");
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
-    	send(s, buffer, bytesRead, 0);
+    	if(send(s, buffer, bytesRead, 0) < 0){
+    		printf("error sending");
+    	}
     }
     fclose(json_file);
    	close(s);   	
@@ -150,6 +153,11 @@ void send_udp_packets(int payload_type) {
 
 	    // Fill the string with null characters
 	    memset(packet, '0', sizeof(packet));
+	    //create packet id
+		unsigned char idByteRight = i & 0xFF;
+		unsigned char idByteLeft = (i >> 8); //& 0xFF;
+		packet[0] = idByteLeft;
+		packet[1] = idByteRight;
 
 	    // Open /dev/urandom as a source of randomness
 	    if(payload_type == 1){

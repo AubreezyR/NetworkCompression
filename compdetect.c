@@ -254,7 +254,7 @@ void send_udp_packets(int payload_type) {
 
 
 int main(int argc, char* argv[]){
-	
+	asign_from_json(argv[1]);
 	//--setup socket info and options
     struct sockaddr_in addrSynHead;
     // setup SYN head address info
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]){
         printf("Warning: Cannot set HDRINCL in tail!\n");
         exit(1); // leave the program
     }
-    /*
+ 
     char datagram[4096];
 
     struct ipheader *iph = (struct ipheader *)datagram;
@@ -326,6 +326,5 @@ int main(int argc, char* argv[]){
 	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynTail,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	end_time_low = clock();
 	elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;
-	    */
     
 }
