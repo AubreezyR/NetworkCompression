@@ -65,15 +65,7 @@ void send_json_over_tcp(char* jsonFile) {
     }
    	//set up socket
    	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-	// Used to allow the socket to reuse the same port when executing the program
-	// multiple times
-	int val = 1;
-	
-	if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&val, sizeof(val)) < 0)
-	{
-		perror("setsockopt error\n");
-		exit(EXIT_FAILURE);
-	}   	
+
    	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
    		perror("Connect error");
    		close(s);
@@ -119,12 +111,6 @@ void send_udp_packets(int payload_type) {
     // Set up socket
     s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 
-	int val = 1;
-	if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&val, sizeof(val)) < 0)
-	{
-		perror("setsockopt error\n");
-		exit(EXIT_FAILURE);
-	}   
 	// Specify the source port 
     struct sockaddr_in source_addr;
     source_addr.sin_family = AF_INET;
@@ -160,17 +146,11 @@ void send_udp_packets(int payload_type) {
 	int num_of_packets =  cJSON_GetObjectItem(json_dict, "NumberOfUDPPacketsInPacketTrain")->valueint;
 	for(int i = 0; i < num_of_packets; i++){
 	    // Create the packet
-	    char packet[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint + 2];
+	    char packet[cJSON_GetObjectItem(json_dict, "SizeOfUDPPayloadInBytes")->valueint];
 
 	    // Fill the string with null characters
 	    memset(packet, '0', sizeof(packet));
-	    //create packet id
-		unsigned char idByteRight = i & 0xFF;
-        unsigned char idByteLeft = (i >> 8); //& 0xFF;
-		packet[0] = idByteLeft;
-		packet[1] = idByteRight;
-        
-		
+
 	    // Open /dev/urandom as a source of randomness
 	    if(payload_type == 1){
 		    int urandom_fd = open("/dev/urandom", O_RDONLY);
