@@ -25,7 +25,7 @@ struct ipheader
     unsigned char ip_hl : 4, ip_v : 4; /* this means that each member is 4 bits */
     unsigned char ip_tos;
     unsigned short int ip_len;
-    unsigned long int ip_id;
+    unsigned short int ip_id;
     unsigned short int ip_off;
     unsigned char ip_ttl;
     unsigned char ip_p;
@@ -50,7 +50,7 @@ struct tcpheader
     unsigned int th_ack;
     unsigned char th_x2 : 4, th_off : 4;
     unsigned char th_flags;
-    unsigned long int th_win;
+    unsigned short int th_win;
     unsigned short int th_sum;
     unsigned short int th_urp;
 }; 
@@ -108,7 +108,7 @@ void setupIPandTCPHeader(struct ipheader *iph, struct tcpheader *tcph, struct so
     iph->ip_v = 4;  // 0100      combined to make one unsignedchar    01010100
     iph->ip_tos = 0;
     iph->ip_len = sizeof(struct ip) + sizeof(struct tcphdr); /* no payload */
-    iph->ip_id = htonl(54321);                               /* the value doesn't matter here */
+    iph->ip_id = (unsigned short)htonl(54321);                               /* the value doesn't matter here */
     iph->ip_off = 0;
     iph->ip_ttl = 255;
     iph->ip_p = 6;
@@ -122,7 +122,7 @@ void setupIPandTCPHeader(struct ipheader *iph, struct tcpheader *tcph, struct so
     tcph->th_x2 = 0;
     tcph->th_off = 0;            /* first and only tcp segment */
     tcph->th_flags = TH_SYN;     /* initial connection request */
-    tcph->th_win = htonl(65535); /* maximum allowed window size */
+    tcph->th_win = (unsigned short)htonl(65535); /* maximum allowed window size */
     tcph->th_sum = 0;            /* if you set a checksum to zero, your kernel's IP stack
                             should fill in the correct checksum during transmission */
     tcph->th_urp = 0;
@@ -313,11 +313,10 @@ int main(int argc, char* argv[]){
 
 
 	//-------SEND THE ENTROPY PACKET TRAINS
-	
+	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynHead,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	clock_t start_time_low, end_time_low,start_time_high, end_time_high;
 	double elapsed_time_low, elapsed_time_high;
 
-	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynHead,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	//start_time_low = clock();
 	/*
 	send_udp_packets(0);
