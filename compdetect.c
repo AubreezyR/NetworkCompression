@@ -180,6 +180,7 @@ void setup_tcp_header(struct tcphdr *tcph)
 
 int main(int argc, char* argv[]){
 	//setup addrs for SYN head
+	printf("hi");
 	int raw_socket;
 	struct sockaddr_in dest_addr;
 	char packet[4096];
@@ -202,19 +203,20 @@ int main(int argc, char* argv[]){
     ip_header->ip_ttl = 255;
     ip_header->ip_p = IPPROTO_TCP;
     ip_header->ip_sum = 0;  // Will be filled in later
-    ip_header->ip_src.s_addr = inet_addr("192.168.128.1");  // Replace with source IP address
-    ip_header->ip_dst.s_addr = inet_addr("192.168.128.255");
+    ip_header->ip_src.s_addr = inet_addr("1.2.3.4");  // Replace with source IP address
+    ip_header->ip_dst.s_addr = inet_addr("192.168.128.3");
 
     // TCP header
     tcp_header->th_sport = htons(12345);  // Replace with source port
     tcp_header->th_dport = htons(9999);
-    tcp_header->th_seq = htonl(1);
+    tcp_header->th_seq = rand();
     tcp_header->th_ack = 0;
     tcp_header->th_off = 5;
     tcp_header->th_flags = TH_SYN;
     tcp_header->th_win = htons(65535);
     tcp_header->th_sum = 0;  // Will be filled in later
     tcp_header->th_urp = 0;
+    tcp_header->th_x2 = 0;
 
     // IP checksum
     ip_header->ip_sum = csum((unsigned short *)packet, ip_header->ip_len >> 1);
