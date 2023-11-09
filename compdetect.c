@@ -194,7 +194,7 @@ void send_udp_packets(int payload_type) {
     }	
 	//set TTL
 	int ttl_value = cJSON_GetObjectItem(json_dict, "TTLForUDPPackets")->valueint; // TTL value (change as needed)
-	printf("ttl: %d", ttl_value);
+	//printf("ttl: %d", ttl_value);
 	if (setsockopt(s, IPPROTO_IP, IP_TTL, &ttl_value, sizeof(ttl_value)) == -1) {
 	    perror("setsockopt (TTL)");
 	    close(s);
@@ -318,13 +318,13 @@ int main(int argc, char* argv[]){
 	double elapsed_time_low, elapsed_time_high;
 
 	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynHead,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
-	start_time_low = clock();
-
+	//start_time_low = clock();
+	/*
 	send_udp_packets(0);
 
 	memset(datagram, 0, 4096);
 	sendSYNPacket(rawSockSYNHead,iph,tcph,addrSynTail,datagram,cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);
 	end_time_low = clock();
 	elapsed_time_low = (double)(end_time_low - start_time_low) / CLOCKS_PER_SEC;
-    
+    */
 }
