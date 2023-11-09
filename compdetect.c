@@ -93,8 +93,7 @@ void asign_from_json(char* jsonFile) {
 unsigned short 
 csum(unsigned short *buf, int nwords)
 {
-    unsigned long sum;
-    for (sum = 0; nwords > 0; nwords--)
+    unsigned long sum;    for (sum = 0; nwords > 0; nwords--)
         sum += *buf++;
     sum = (sum >> 16) + (sum & 0xffff);
     sum += (sum >> 16);
@@ -104,10 +103,12 @@ csum(unsigned short *buf, int nwords)
 /* This function sets up the ip and tcp header as it set their pointers */
 void setupIPandTCPHeader(struct ipheader *iph, struct tcpheader *tcph, struct sockaddr_in addrSynHead, char *datagram, int destPort)
 {
+	printf("107");
     iph->ip_hl = 5; // 0101
     iph->ip_v = 4;  // 0100      combined to make one unsignedchar    01010100
     iph->ip_tos = 0;
-    iph->ip_len = sizeof(struct ip) + sizeof(struct tcphdr); /* no payload */
+    iph->ip_len = sizeof(struct ipheader) + sizeof(struct tcphdr); /* no payload */
+    printf("ip len %d",iph->ip_len );
     iph->ip_id = (unsigned short)htonl(54321);                               /* the value doesn't matter here */
     iph->ip_off = 0;
     iph->ip_ttl = 255;
@@ -117,7 +118,7 @@ void setupIPandTCPHeader(struct ipheader *iph, struct tcpheader *tcph, struct so
     iph->ip_dst = addrSynHead.sin_addr.s_addr;
     tcph->th_sport = htons(1234); /* arbitrary port */
     tcph->th_dport = htons(destPort);
-    tcph->th_seq = random(); /* in a SYN packet, the sequence is a random */
+    tcph->th_seq = random(); /* in a SYN packet, the sequence is a ra0ndom */
     tcph->th_ack = 0;        /* number, and the ack sequence is 0 in the 1st packet */
     tcph->th_x2 = 0;
     tcph->th_off = 0;            /* first and only tcp segment */
@@ -258,13 +259,13 @@ int main(int argc, char* argv[]){
 	//--setup socket info and options
     struct sockaddr_in addrSynHead;
     // setup SYN head address info
-    addrSynHead.sin_family = AF_INET;
+    addrSynHead.sin_family = PF_INET;
     addrSynHead.sin_port = htons(cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);//replace with json
     addrSynHead.sin_addr.s_addr = inet_addr("192.168.128.1");
 
     struct sockaddr_in addrSynTail;
     // setup SYN head address info
-    addrSynTail.sin_family = AF_INET;
+    addrSynTail.sin_family = PF_INET;
     addrSynTail.sin_port = htons(cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint);
     addrSynTail.sin_addr.s_addr = inet_addr("192.168.128.1");
 
