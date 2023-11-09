@@ -260,18 +260,18 @@ int main(int argc, char* argv[]){
     // setup SYN head address info
     addrSynHead.sin_family = AF_INET;
     addrSynHead.sin_port = htons(cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint);//replace with json
-    addrSynHead.sin_addr.s_addr = inet_addr("192.168.128.2");
+    addrSynHead.sin_addr.s_addr = inet_addr("192.168.128.1");
 
     struct sockaddr_in addrSynTail;
     // setup SYN head address info
     addrSynTail.sin_family = AF_INET;
     addrSynTail.sin_port = htons(cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint);
-    addrSynTail.sin_addr.s_addr = inet_addr("192.168.128.2");
+    addrSynTail.sin_addr.s_addr = inet_addr("192.168.128.1");
 
     //open sockets
 
     //head
-    int rawSockSYNHead = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+    int rawSockSYNHead = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
     if (rawSockSYNHead < 0)
     {
         printf("Unable to create a socket\n");
@@ -286,7 +286,7 @@ int main(int argc, char* argv[]){
     }
  
     //tail
-    int rawSockSYNTail = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+    int rawSockSYNTail = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
     if (rawSockSYNTail < 0)
     {
         printf("Unable to create tail socket\n");
