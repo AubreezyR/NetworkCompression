@@ -56,7 +56,7 @@ void send_json_over_tcp(char* jsonFile) {
    	
    	   	
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_family = AF_INET; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
     if((status = getaddrinfo(ip, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
@@ -80,7 +80,12 @@ void send_json_over_tcp(char* jsonFile) {
     char buffer[1024];
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
-    	send(s, buffer, bytesRead, 0);
+    	if(send(s, buffer, bytesRead, 0) < 0){
+    		printf("send error");
+    		
+    	}else{
+    		printf("json sent");
+    	}
     }
     fclose(json_file);
    	close(s);   	
