@@ -155,7 +155,11 @@ void send_udp_packets(int payload_type) {
 
 	    // Fill the string with null characters
 	    memset(packet, '0', sizeof(packet));
-
+		//create packet id
+		unsigned char idByteRight = i & 0xFF;
+		unsigned char idByteLeft = (i >> 8); //& 0xFF;
+		packet[0] = idByteLeft;
+		packet[1] = idByteRight;
 	    // Open /dev/urandom as a source of randomness
 	    if(payload_type == 1){
 		    int urandom_fd = open("/dev/urandom", O_RDONLY);
@@ -258,6 +262,7 @@ int main(int argc, char *argv[]) {
 	asign_from_json(argv[1]);
 	//TCP and JSON
 	send_json_over_tcp(argv[1]);
+	sleep(1);
 	send_udp_packets(0);
 	sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeInSeconds")->valueint);
 	send_udp_packets(1);
