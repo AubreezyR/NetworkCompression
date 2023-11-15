@@ -297,6 +297,8 @@ int main(char argc, char *argv[]){
 	asign_from_json(argv[1]);
 	send_json_over_tcp(argv[1]);
 	send_syn(1);
-	send_udp_packets(0);
+	//send_udp_packets(0);
+	//sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeinSeconds")->valueint);
+	//send_udp_packets(1);
 	send_syn(0);
 }
