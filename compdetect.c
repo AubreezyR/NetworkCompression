@@ -190,7 +190,7 @@ int main(int argc, char* argv[]){
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_port = htons (9999);/* you byte-order >1byte header values to network
 	                byte order (not needed on big endian machines) */
-	dest_addr.sin_addr.s_addr = inet_addr ("192.168.1.12");
+	dest_addr.sin_addr.s_addr = inet_addr ("192.168.128.3");
 	
 	memset (packet, 0, 4096);   /* zero out the buffer */
 	
