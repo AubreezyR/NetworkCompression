@@ -183,16 +183,16 @@ int main(int argc, char* argv[]){
 	printf("hi");
 	int raw_socket;
 	struct sockaddr_in dest_addr;
-	char packet[4096];
-	struct ip *ip_header = (struct ip *)packet;
-	struct tcphdr *tcp_header = (struct tcphdr *) packet + sizeof(struct ip);
+	char datagram[4096];
+	struct ip *ip_header = (struct ip *)datagram;
+	struct tcphdr *tcp_header = (struct tcphdr *) (datagram + sizeof(struct ip));
 
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_port = htons (9999);/* you byte-order >1byte header values to network
 	                byte order (not needed on big endian machines) */
 	dest_addr.sin_addr.s_addr = inet_addr ("192.168.128.3");
 	
-	memset (packet, 0, 4096);   /* zero out the buffer */
+	//memset (packet, 0, 4096);   /* zero out the buffer */
 	
 	raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
 	if(raw_socket == -1){
@@ -224,12 +224,13 @@ int main(int argc, char* argv[]){
     tcp_header->th_sum = 0;  // Will be filled in later
     tcp_header->th_urp = 0;
     tcp_header->th_x2 = 0;
+    
 
     // IP checksum
-    ip_header->ip_sum = csum((unsigned short *)packet, ip_header->ip_len >> 1);
+    ip_header->ip_sum = csum((unsigned short *)datagram, ip_header->ip_len >> 1);
     
     // TCP checksum
-    tcp_header->th_sum = csum((unsigned short *)(packet + sizeof(struct ip)), (sizeof(struct tcphdr) >> 1) + (ip_header->ip_len >> 1));
+    tcp_header->th_sum = csum((unsigned short *)(datagram + sizeof(struct ip)), (sizeof(struct tcphdr) >> 1) + (ip_header->ip_len >> 1));
 
 	int one = 1;
 	const int *val = &one;
@@ -237,7 +238,7 @@ int main(int argc, char* argv[]){
 		printf("cant set hdrincl");
 	}
 
-	if (sendto(raw_socket, packet, ip_header->ip_len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
+	if (sendto(raw_socket, datagram, ip_header->ip_len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
 	    perror("Packet sending failed");
 	    close(raw_socket);
 	    exit(EXIT_FAILURE);
