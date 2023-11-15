@@ -187,7 +187,12 @@ int main(int argc, char* argv[]){
 	struct ip *ip_header = (struct ip *)packet;
 	struct tcphdr *tcp_header = (struct tcphdr *) packet + sizeof(struct ip);
 
+	dest_addr.sin_family = AF_INET;
+	dest_addr.sin_port = htons (9999);/* you byte-order >1byte header values to network
+	                byte order (not needed on big endian machines) */
+	dest_addr.sin_addr.s_addr = inet_addr ("192.168.1.12");
 	
+	memset (packet, 0, 4096);   /* zero out the buffer */
 	
 	raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
 	if(raw_socket == -1){
@@ -231,9 +236,6 @@ int main(int argc, char* argv[]){
 	if(setsockopt(raw_socket, IPPROTO_IP, IP_HDRINCL, val, sizeof(one))< 0){
 		printf("cant set hdrincl");
 	}
-	
-	dest_addr.sin_family = AF_INET;
-	dest_addr.sin_addr.s_addr = ip_header->ip_dst.s_addr;
 
 	if (sendto(raw_socket, packet, ip_header->ip_len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) == -1) {
 	    perror("Packet sending failed");
