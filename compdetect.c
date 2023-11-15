@@ -185,8 +185,10 @@ int main(int argc, char* argv[]){
 	struct sockaddr_in dest_addr;
 	char packet[4096];
 	struct ip *ip_header = (struct ip *)packet;
-	struct tcphdr *tcp_header = (struct tcphdr *)(packet + sizeof(struct ip));
+	struct tcphdr *tcp_header = (struct tcphdr *) packet + sizeof(struct ip);
 
+	
+	
 	raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
 	if(raw_socket == -1){
 		perror("Socke creation failed");
@@ -224,6 +226,12 @@ int main(int argc, char* argv[]){
     // TCP checksum
     tcp_header->th_sum = csum((unsigned short *)(packet + sizeof(struct ip)), (sizeof(struct tcphdr) >> 1) + (ip_header->ip_len >> 1));
 
+	int one = 1;
+	const int *val = &one;
+	if(setsockopt(raw_socket, IPPROTO_IP, IP_HDRINCL, val, sizeof(one))< 0){
+		printf("cant set hdrincl");
+	}
+	
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_addr.s_addr = ip_header->ip_dst.s_addr;
 
