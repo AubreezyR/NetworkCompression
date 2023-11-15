@@ -51,6 +51,7 @@ void asign_from_json(char* jsonFile) {
 /* this function generates header checksums */
 
 
+
 void send_udp_packets(int payload_type) {
     int s;
     int status;
@@ -180,7 +181,7 @@ void send_syn(int isHead){
 	}else{
 		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint;
 	}
-	char *ip = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valuestring;
+	char *ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
 	int raw_socket;
 	struct sockaddr_in dest_addr;
 	char datagram[4096];
@@ -246,7 +247,8 @@ void send_syn(int isHead){
 }
 
 
-int main(char argv, int argc){
+int main(char argc, char *argv[]){
+	asign_from_json(argv[1]);
 	send_syn(1);
 	send_udp_packets(0);
 	send_syn(0);
