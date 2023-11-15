@@ -11,6 +11,7 @@
 /////
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <pthread.h>
 
 cJSON*json_dict;
 
@@ -219,10 +220,10 @@ void setup_tcp_header(struct tcphdr *tcph)
 }*/
 
 
-void send_syn(int isHead){
+void *send_syn(void* isHead){
 	//setup addrs for SYN head
 	int portInt = 0;
-	if(isHead){
+	if(*((int*)isHead)){
 		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint;
 	}else{
 		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint;
@@ -292,13 +293,51 @@ void send_syn(int isHead){
     close(raw_socket);
 }
 
+void *listen_for_rst_packets(void *arg) {
+    int raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+    if (raw_socket == -1) {
+        perror("Failed to create raw socket");
+        exit(EXIT_FAILURE);
+    }
 
-int main(char argc, char *argv[]){
+    // Listen for RST packets
+    while (1) {
+        char buffer[4096];
+        if (recv(raw_socket, buffer, sizeof(buffer), 0) == -1) {
+            perror("Failed to receive packet");
+            close(raw_socket);
+            exit(EXIT_FAILURE);
+        }
+
+        // Extract relevant information from the packet
+        // Check if it's an RST packet, and record its arrival time
+        // Implement your logic here
+    }
+
+    close(raw_socket);
+    return NULL;
+}
+
+
+
+int main(int argc, char *argv[]){
+	if(argc != 2){
+		printf("invalid amount of args");
+	}
 	asign_from_json(argv[1]);
-	send_json_over_tcp(argv[1]);
-	send_syn(1);
-	//send_udp_packets(0);
-	//sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeinSeconds")->valueint);
-	//send_udp_packets(1);
-	send_syn(0);
+	pthread_t thread_send_x, thread_send_y, thread_listen;
+
+    // Create threads for sending SYN packets
+    int port_x =  cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint;
+    int port_y = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint;;
+    pthread_create(&thread_send_x, NULL, send_syn, (void *)&port_x);
+    pthread_create(&thread_send_y, NULL, send_syn, (void *)&port_y);
+
+    // Create a thread for listening to RST packets
+    pthread_create(&thread_listen, NULL, listen_for_rst_packets, NULL);
+
+    // Wait for threads to finish
+    pthread_join(thread_send_x, NULL);
+    pthread_join(thread_send_y, NULL);
+    pthread_join(thread_listen, NULL);
 }
