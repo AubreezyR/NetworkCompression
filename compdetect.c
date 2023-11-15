@@ -50,7 +50,53 @@ void asign_from_json(char* jsonFile) {
 
 /* this function generates header checksums */
 
+void send_json_over_tcp(char* jsonFile) {
+    int s;
+   	int status;
+   	struct addrinfo hints;
+   	struct addrinfo *servinfo;
+   	char* ip = cJSON_GetObjectItem(json_dict, "ServerIPAddress")->valuestring;
+   	int portInt = cJSON_GetObjectItem(json_dict, "PortNumberTCP_PreProbingPhases")->valueint;
+   	char port[5];
+   	sprintf(port, "%d", portInt);
+   	
+   	   	
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET; // ipv4 or v6 AF_INET is v4 AF_INET6 is v6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;//asigns locall host ip address to socket
+    if((status = getaddrinfo(ip, port, &hints, &servinfo)) != 0){//replace NULL with an actuall website or IP if you want
+		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));    
+		exit(1);
+    }
+   	//set up socket
+   	s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 
+   	if(connect(s,servinfo->ai_addr, servinfo->ai_addrlen) < 0){
+   		perror("Connect error");
+   		close(s);
+   	}
+	// Read and send the JSON file over TCP
+    FILE *json_file = fopen(jsonFile, "r");
+    if (json_file == NULL) {
+        perror("Error opening JSON file");
+        close(s);	
+        exit(EXIT_FAILURE);
+    }
+    char buffer[1024];
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), json_file)) > 0) {
+    	if(send(s, buffer, bytesRead, 0) < 0){
+    		printf("send error");
+    		
+    	}else{
+    		printf("json sent");
+    	}
+    }
+    fclose(json_file);
+   	close(s);   	
+   	
+}
 
 void send_udp_packets(int payload_type) {
     int s;
@@ -249,6 +295,7 @@ void send_syn(int isHead){
 
 int main(char argc, char *argv[]){
 	asign_from_json(argv[1]);
+	send_json_over_tcp(argv[1]);
 	send_syn(1);
 	send_udp_packets(0);
 	send_syn(0);
