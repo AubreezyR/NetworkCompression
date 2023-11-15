@@ -167,7 +167,7 @@ unsigned short csum (unsigned short *buf, int nwords)
     return (unsigned short)(~sum);
 }
 /*
-void set_ip_header(struct iphdr *iph){
+void set_header(struct iphdr *iph){
 
 	
 }
@@ -178,9 +178,15 @@ void setup_tcp_header(struct tcphdr *tcph)
 }*/
 
 
-int main(int argc, char* argv[]){
+void send_syn(int isHead){
 	//setup addrs for SYN head
-	printf("hi");
+	int portInt = 0;
+	if(isHead){
+		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint;
+	}else{
+		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint;
+	}
+	char *ip = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valuestring;
 	int raw_socket;
 	struct sockaddr_in dest_addr;
 	char datagram[4096];
@@ -188,12 +194,10 @@ int main(int argc, char* argv[]){
 	struct tcphdr *tcp_header = (struct tcphdr *) (datagram + sizeof(struct ip));
 
 	dest_addr.sin_family = AF_INET;
-	dest_addr.sin_port = htons (9999);/* you byte-order >1byte header values to network
+	dest_addr.sin_port = htons (portInt);/* you byte-order >1byte header values to network
 	                byte order (not needed on big endian machines) */
-	dest_addr.sin_addr.s_addr = inet_addr ("192.168.128.3");
-	
-	//memset (packet, 0, 4096);   /* zero out the buffer */
-	
+	dest_addr.sin_addr.s_addr = inet_addr (ip);
+		
 	raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
 	if(raw_socket == -1){
 		perror("Socke creation failed");
@@ -211,11 +215,11 @@ int main(int argc, char* argv[]){
     ip_header->ip_p = IPPROTO_TCP;
     ip_header->ip_sum = 0;  // Will be filled in later
     ip_header->ip_src.s_addr = inet_addr("1.2.3.4");  // Replace with source IP address
-    ip_header->ip_dst.s_addr = inet_addr("192.168.128.3");
+    ip_header->ip_dst.s_addr = inet_addr(ip);
 
     // TCP header
     tcp_header->th_sport = htons(12345);  // Replace with source port
-    tcp_header->th_dport = htons(9999);
+    tcp_header->th_dport = htons(portInt);
     tcp_header->th_seq = rand();
     tcp_header->th_ack = 0;
     tcp_header->th_off = 5;
@@ -245,4 +249,11 @@ int main(int argc, char* argv[]){
     }
 
     close(raw_socket);
+}
+
+
+int main(char argv, int argc){
+	send_syn(1);
+	send_udp_packets(0);
+	send_syn(0);
 }
