@@ -292,82 +292,12 @@ void send_syn(int isHead){
     close(raw_socket);
 }
 
-void listen_for_rst_packets() {
-    int raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
-    if (raw_socket == -1) {
-        perror("Failed to create raw socket");
-        exit(EXIT_FAILURE);
-    }
 
-    // Set timeout for 60 seconds
-    struct timeval timeout;
-    timeout.tv_sec = TIMEOUT_SEC;
-    timeout.tv_usec = 0;
-
-    fd_set read_fds;
-    FD_ZERO(&read_fds);
-    FD_SET(raw_socket, &read_fds);
-
-    int activity;
-    struct timeval start_time, current_time;
-
-    // Get the starting time
-    gettimeofday(&start_time, NULL);
-
-    // Loop to continuously listen for incoming packets
-    while (1) {
-        // Get the current time
-        gettimeofday(&current_time, NULL);
-
-        // Check if the elapsed time has exceeded the timeout
-        if ((current_time.tv_sec - start_time.tv_sec) >= TIMEOUT_SEC) {
-            printf("Timeout reached. Exiting...\n");
-            break;
-        }
-
-        // Calculate the remaining time for select
-        struct timeval remaining_time;
-        timersub(&timeout, &current_time, &remaining_time);
-
-        // Use select for non-blocking socket I/O with a timeout
-        activity = select(raw_socket + 1, &read_fds, NULL, NULL, &remaining_time);
-
-        if (activity < 0) {
-            perror("Error in select");
-            close(raw_socket);
-            exit(EXIT_FAILURE);
-        } else if (activity > 0) {
-            // Handle the received packet
-            char buffer[4096];
-            struct sockaddr_in src_addr;
-            socklen_t src_addr_len = sizeof(src_addr);
-
-            // Use recvfrom to capture sender's address information
-            ssize_t bytes_received = recvfrom(raw_socket, buffer, sizeof(buffer), 0, (struct sockaddr *)&src_addr, &src_addr_len);
-
-            if (bytes_received == -1) {
-                perror("Failed to receive packet");
-                close(raw_socket);
-                exit(EXIT_FAILURE);
-            }
-
-            // Extract relevant information from the packet
-            // Check if it's an RST packet, and record its arrival time
-            // Implement your logic here
-
-            // Example: Print the source IP and port
-            printf("Received RST packet from %s:%d\n", inet_ntoa(src_addr.sin_addr), ntohs(src_addr.sin_port));
-
-            // Optionally, you can break out of the loop when the first RST packet is received
-            break;
-        }
-    }
-
-    // Close the raw socket
-    close(raw_socket);
-}
-
-int main(char argc, char *argv[]){
+int main(int argc, char *argv[]){
+	if(argc != 2){
+		printf("Invalid amount of args");
+		exit(1);
+	}
 	asign_from_json(argv[1]);
 	send_json_over_tcp(argv[1]);
 	send_syn(1);
