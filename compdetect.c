@@ -14,7 +14,6 @@
 
 cJSON*json_dict;
 
-
 void asign_from_json(char* jsonFile) {
 
 	FILE *file = fopen(jsonFile, "r");
@@ -207,17 +206,12 @@ unsigned short csum (unsigned short *buf, int nwords)
     sum += (sum >> 16);
     return (unsigned short)(~sum);
 }
-/*
-void set_header(struct iphdr *iph){
 
-	
+void set_df_flag(char* ip_header) {
+    // Set the DF bit in the IP header
+    unsigned short* flags = (unsigned short*)(ip_header + 6);
+    *flags |= htons(IP_DF);
 }
-
-void setup_tcp_header(struct tcphdr *tcph)
-{
-    
-}*/
-
 
 void send_syn(int isHead){
 	//setup addrs for SYN head
@@ -270,7 +264,10 @@ void send_syn(int isHead){
     tcp_header->th_urp = 0;
     tcp_header->th_x2 = 0;
     
-
+	// IP DF
+	set_df_flag((char*)ip_header);
+	
+	
     // IP checksum
     ip_header->ip_sum = csum((unsigned short *)datagram, ip_header->ip_len >> 1);
     
