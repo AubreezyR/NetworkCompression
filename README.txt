@@ -1,0 +1,33 @@
+# Networks Final Project
+
+## Table of Contents
+1. [Description](#description)
+2. [Instructions](#instructions)
+3. [Incomplete Features](#incomplete-features)
+7. [Contributers](#contributers)
+
+## Description
+This project is an example of End-to-End Detection of Network Compression. It is a standalone application as well as a non standalone application that uses a third party JSON parser as well as an inputed config file.
+  # Standalone:
+    In this version of the application it will detect compression upon the time different between two SYN packet and two UDP packet trains.
+  #Non
+
+
+## Instructions
+In order to run this program:
+1. Clone the repo from github or include the following files in the same folder:
+    -cJSON.h
+    -cSJON.c
+    -standalone.c
+    -compdetect_client.c
+    -comdetect_server.c
+    -a config.json file
+2. Once you have the correct file structure run the command "gcc -o standalone standalone.c cJSON.c -lm" to compile the program
+3. In order to run the program you must write "sudo ./standalone.c [your config.json file]".
+
+
+## Incomplete Features
+While most of the program fulfills the required features, I did encounter challenges in one particular area that ultimately remained unfulfilled. I could not receive RST packets in the program. I worked on this for a considerable amount of time and confirmed that the packets were being sent correctly. However, the reception of RST packets proved elusive. As a temporary workaround, the timers initiate when I send the two SYN packets, and the final compression result is obtained by calculating the difference between the two.
+In the future my plan to capture the RST packets would use the multithreading library threads.h inorder to both send he SYN and UDP packets on one thread and listen for the RST packets on another thread, starting and stopping the timer at the apropriate places and then calculating the time to see if compression occured or not.
+## Contributers
+Aubrey Robinson
