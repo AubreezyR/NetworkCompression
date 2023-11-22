@@ -10,6 +10,8 @@
 #include "cJSON.h"
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <time.h>
+#include <math.h>
 
 cJSON * json_dict;
 
@@ -309,10 +311,30 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	asign_from_json(argv[1]);
+
+	clock_t start_time_head, end_time_head,start_time_tail, end_time_tail;
+	double elapsed_time_head, elapsed_time_tail;
+	
 	send_json_over_tcp(argv[1]);
+	start_time_head = clock();
+	//start clock
 	send_syn(1);
 	send_udp_packets(0);
 	sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeinSeconds")->valueint);
 	send_udp_packets(1);
+	end_time_head = clock();
+	start_time_tail = clock();
 	send_syn(0);
+	end_time_tail = clock();
+
+	elapsed_time_head = (double)(end_time_head - start_time_head) / CLOCKS_PER_SEC;
+	elapsed_time_tail = (double)(end_time_tail - start_time_tail) / CLOCKS_PER_SEC;
+
+	if(fabs(elapsed_time_tail - elapsed_time_head) > 0.1){
+		printf("No compression dectected");
+	}else{
+		printf("compression dectected");
+	}
+
+	//stop clock`=
 }
