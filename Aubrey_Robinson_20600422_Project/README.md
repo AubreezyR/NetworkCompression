@@ -9,8 +9,9 @@
 ## Description
 This project is an example of End-to-End Detection of Network Compression. It is a standalone application as well as a non standalone application that uses a third party JSON parser as well as an inputed config file.
   # Standalone:
-    In this version of the application it will detect compression upon the time different between two SYN packet and two UDP packet trains.
-  #Non
+  In this version of the application it will detect compression upon the time different between two SYN packet with a UDP packet train inbetween them.
+  #Non-Standalone:
+  This application will detect compression upon the time difference between the start/end of a low entropy packet and start/end of a high entropy packet train. The results are then sent to the client which says wether or not compression was detected 
 
 
 ## Instructions
