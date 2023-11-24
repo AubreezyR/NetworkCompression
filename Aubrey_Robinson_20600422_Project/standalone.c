@@ -93,8 +93,6 @@ send_json_over_tcp(char *jsonFile)
 		if (send(s, buffer, bytesRead, 0) < 0) {
 			printf("send error");
 
-		} else {
-			printf("json sent");
 		}
 	}
 	fclose(json_file);
@@ -150,7 +148,6 @@ send_udp_packets(int payload_type)
 	//set TTL
 	int	ttl_value = cJSON_GetObjectItem(json_dict, "TTLForUDPPackets")->valueint;
 	//TTL value(change as needed)
-		printf("ttl: %d", ttl_value);
 	if (setsockopt(s, IPPROTO_IP, IP_TTL, &ttl_value, sizeof(ttl_value)) == -1) {
 		perror("setsockopt (TTL)");
 		close(s);
@@ -316,6 +313,7 @@ main(int argc, char *argv[])
 	double elapsed_time_head, elapsed_time_tail;
 	
 	send_json_over_tcp(argv[1]);
+	sleep(1);
 	start_time_head = clock();
 	//start clock
 	send_syn(1);
