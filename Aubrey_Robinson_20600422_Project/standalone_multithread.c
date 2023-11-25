@@ -309,6 +309,7 @@ void
 	ip_header->ip_sum = csum((unsigned short *)datagram, ip_header->ip_len >> 1);
 
 	//TCP checksum
+	tcp_header->th_sum = csum((unsigned short *)(datagram + sizeof(struct ip)), (sizeof(struct tcphdr) >> 1) + (ip_header->ip_len >> 1));
 	int	one = 1;
 	const int *val = &one;
 	if (setsockopt(raw_socket, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0) {
