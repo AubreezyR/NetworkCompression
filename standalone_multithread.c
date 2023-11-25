@@ -260,6 +260,7 @@ void
 	struct ip *ip_header = (struct ip *)datagram;
 	struct tcphdr *tcp_header = (struct tcphdr *)(datagram + sizeof(struct ip));
 	struct pseudo_header psh;
+	char *pseudogram;
 
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_port = htons(portInt);	/* you byte-order >1byte
@@ -316,9 +317,12 @@ void
 	psh.tcp_length = htons(sizeof(struct tcphdr) + strlen(datagram));
 
 	int psize = sizeof(struct pseudo_header) + sizeof(struct tcphdr) + strlen(datagram);
-	//pseudogram = malloc(psize);
-	;
-	tcp_header->th_sum = csum( (unsigned short*) datagram , psize);
+	pseudogram = malloc(psize);
+	
+	memcpy(pseudogram , (char*) &psh , sizeof (struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header) , tcp_header , sizeof(struct tcphdr) + strlen(datagram));
+	
+	tcp_header->th_sum = csum( (unsigned short*) pseudogram , psize);
 	int	one = 1;
 	const int *val = &one;
 	if (setsockopt(raw_socket, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0) {
