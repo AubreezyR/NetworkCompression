@@ -213,15 +213,25 @@ send_udp_packets(int payload_type)
 
 }
 
-unsigned short 
-csum(unsigned short *buf, int nwords)
-{
-	unsigned long	sum;
-	for (sum = 0; nwords > 0; nwords--)
-		sum += *buf++;
-	sum = (sum >> 16) + (sum & 0xffff);
-	sum += (sum >> 16);
-	return (unsigned short)(~sum);
+uint16_t csum(const void *data, size_t length) {
+    const uint16_t *buf = (const uint16_t *)data;
+    uint32_t sum = 0;
+
+    while (length > 1) {
+        sum += *buf++;
+        length -= 2;
+    }
+
+    if (length > 0) {
+        sum += *((const uint8_t *)buf);
+    }
+
+    // Add the carry
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    return (uint16_t)~sum;
 }
 
 void 
