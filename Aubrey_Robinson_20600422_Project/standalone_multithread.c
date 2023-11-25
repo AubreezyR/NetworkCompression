@@ -322,6 +322,42 @@ void
 	//pthread_mutex_unlock(&mutex);
 }
 
+void *rst_listener_thread(void *arg)
+{
+    int rst_socket;
+    struct sockaddr_in rst_source_addr;
+    struct sockaddr_in rst_dest_addr;
+    socklen_t rst_addrlen = sizeof(rst_source_addr);
+    char rst_buffer[4096];
+
+    rst_socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+
+    if (rst_socket == -1)
+    {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    while (1)
+    {
+        recvfrom(rst_socket, rst_buffer, sizeof(rst_buffer), 0, (struct sockaddr *)&rst_source_addr, &rst_addrlen);
+
+        // Check for RST flag in TCP header
+        struct ip *rst_ip_header = (struct ip *)rst_buffer;
+        struct tcphdr *rst_tcp_header = (struct tcphdr *)(rst_buffer + (rst_ip_header->ip_hl << 2));
+
+        if (rst_tcp_header->th_flags & TH_RST)
+        {
+            printf("Received RST packet\n");
+            // Add your RST handling logic here
+        }
+    }
+
+    close(rst_socket);
+    return NULL;
+}
+
+
 int 
 main(int argc, char *argv[])
 {
@@ -338,11 +374,12 @@ main(int argc, char *argv[])
 	//clock_t start_time_head, end_time_head,start_time_tail, end_time_tail;
 	//double elapsed_time_head, elapsed_time_tail;
 
-	pthread_t threads[5];
+	pthread_t threads[2];
 	//int thread_args[5] = {1, 0, 1, 0, 0}; // arguments for the threads
 	pthread_create(&threads[0], NULL, send_syn, (void *)&threadArgs);
+	pthread_create(&threads[1], NULL, rst_listener_thread, (void *)&threadArgs);
 
-	pthread_join(threads[0],NULL);
+	pthread_join(threads[1],NULL);
 	/*
 	send_json_over_tcp(argv[1]);
 	start_time_head = clock();
