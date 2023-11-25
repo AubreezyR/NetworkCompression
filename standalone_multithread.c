@@ -311,7 +311,7 @@ void
 
 	//TCP checksum
 	psh.source_address = inet_addr("192.168.128.2");
-	//psh.dest_address = sin.sin_addr.s_addr;
+	psh.dest_address = 	dest_addr.sin_addr.s_addr;
 	psh.placeholder = 0;
 	psh.protocol = IPPROTO_TCP;
 	psh.tcp_length = htons(sizeof(struct tcphdr) + strlen(datagram));
