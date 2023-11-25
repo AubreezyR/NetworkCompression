@@ -15,6 +15,11 @@
 #include <pthread.h>
 
 cJSON * json_dict;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+struct ThreadArgs{
+	int isHead;
+	char* argv;
+};
 
 void 
 asign_from_json(char *jsonFile)
@@ -47,6 +52,7 @@ asign_from_json(char *jsonFile)
 		perror("Failed to parse JSON data");
 		exit(1);
 	}
+	
 }
 
 /* this function generates header checksums */
@@ -100,12 +106,12 @@ send_json_over_tcp(char *jsonFile)
 	}
 	fclose(json_file);
 	close(s);
-
 }
 
 void 
 send_udp_packets(int payload_type)
 {
+	pthread_mutex_lock(&mutex);
 	int	s;
 	int	status;
 	struct addrinfo	hints;
@@ -203,6 +209,8 @@ send_udp_packets(int payload_type)
 
 	freeaddrinfo(servinfo);
 	close(s);
+	pthread_mutex_unlock(&mutex);
+
 }
 
 unsigned short 
@@ -225,11 +233,13 @@ set_df_flag(char *ip_header)
 }
 
 void 
-*send_syn(void* isHead)
+*send_syn(void* threadArgs)
 {
 	//setup addrs for SYN head
+	//pthread_mutex_lock(&mutex);
 	int		portInt = 0;
-	if (isHead) {
+	struct ThreadArgs *args = (struct ThreadArgs *)threadArgs;
+	if (args->isHead == 1) {
 		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPHeadSYN")->valueint;
 	} else {
 		portInt = cJSON_GetObjectItem(json_dict, "DestinationPortNumberTCPTailSYN")->valueint;
@@ -264,7 +274,7 @@ void
 	ip_header->ip_p = IPPROTO_TCP;
 	ip_header->ip_sum = 0;
 	//Will be filled in later
-	ip_header->ip_src.s_addr = inet_addr("1.2.3.4");
+	ip_header->ip_src.s_addr = inet_addr("192.168.128.2");
 	//Replace with source IP address
 	ip_header->ip_dst.s_addr = inet_addr(ip);
 
@@ -302,30 +312,37 @@ void
 		exit(EXIT_FAILURE);
 	}
 	close(raw_socket);
-	if(*(int *)isHead == 1){
+	if(args->isHead == 1){
+		args->isHead = 0;
 		send_udp_packets(0);
 		sleep(cJSON_GetObjectItem(json_dict, "InterMeasurementTimeinSeconds")->valueint);
 		send_udp_packets(1);
-		send_syn(0);
+		send_syn(threadArgs);
 	}
+	//pthread_mutex_unlock(&mutex);
 }
 
 int 
 main(int argc, char *argv[])
 {
+	struct ThreadArgs threadArgs;
+	threadArgs.isHead = 1;
+	threadArgs.argv = argv[1];
 	if (argc != 2) {
 		printf("Invalid amount of args");
 		exit(1);
 	}
 	asign_from_json(argv[1]);
+	send_json_over_tcp(argv[1]);
 
 	//clock_t start_time_head, end_time_head,start_time_tail, end_time_tail;
 	//double elapsed_time_head, elapsed_time_tail;
 
 	pthread_t threads[5];
-	int thread_args[5] = {1, 0, 1, 0, 0}; // arguments for the threads
-	pthread_create(&threads[0], NULL, send_syn, &thread_args[0]);
+	//int thread_args[5] = {1, 0, 1, 0, 0}; // arguments for the threads
+	pthread_create(&threads[0], NULL, send_syn, (void *)&threadArgs);
 
+	pthread_join(threads[0],NULL);
 	/*
 	send_json_over_tcp(argv[1]);
 	start_time_head = clock();
