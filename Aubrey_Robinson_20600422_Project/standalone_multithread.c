@@ -299,8 +299,6 @@ void
 	ip_header->ip_sum = csum((unsigned short *)datagram, ip_header->ip_len >> 1);
 
 	//TCP checksum
-	tcp_header->th_sum = csum((unsigned short *)(datagram + sizeof(struct ip)), (sizeof(struct tcphdr) >> 1) + (ip_header->ip_len >> 1));
-
 	int	one = 1;
 	const int *val = &one;
 	if (setsockopt(raw_socket, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0) {
@@ -379,6 +377,7 @@ main(int argc, char *argv[])
 	pthread_create(&threads[0], NULL, send_syn, (void *)&threadArgs);
 	pthread_create(&threads[1], NULL, rst_listener_thread, (void *)&threadArgs);
 
+	pthread_join(threads[0],NULL);
 	pthread_join(threads[1],NULL);
 	/*
 	send_json_over_tcp(argv[1]);
