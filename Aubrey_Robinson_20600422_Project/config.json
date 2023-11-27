@@ -9,5 +9,6 @@
   "SizeOfUDPPayloadInBytes": 1000,
   "InterMeasurementTimeInSeconds": 15,
   "NumberOfUDPPacketsInPacketTrain": 6000,
-  "TTLForUDPPackets": 255
+  "TTLForUDPPackets": 255,
+  "ClientIPAddress": "192.168.128.2"
 }

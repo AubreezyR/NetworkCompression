@@ -39,7 +39,7 @@ asign_from_json(char *jsonFile)
 	json_data[file_size] = '\0';
 
 	//Parse the JSON data
-		json_dict = cJSON_Parse(json_data);
+	json_dict = cJSON_Parse(json_data);
 	free(json_data);
 
 	if (json_dict == NULL) {
@@ -260,7 +260,8 @@ send_syn(int isHead)
 	ip_header->ip_p = IPPROTO_TCP;
 	ip_header->ip_sum = 0;
 	//Will be filled in later
-	ip_header->ip_src.s_addr = inet_addr("1.2.3.4");
+	char*clientIP = cJSON_GetObjectItem(json_dict, "ClientIPAddress")->valuestring;
+	ip_header->ip_src.s_addr = inet_addr(clientIP);
 	//Replace with source IP address
 	ip_header->ip_dst.s_addr = inet_addr(ip);
 
