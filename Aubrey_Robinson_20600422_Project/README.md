@@ -24,9 +24,11 @@ In order to run this program:
     -compdetect_client.c
     -comdetect_server.c
     -a config.json file
-3. Once you have the correct file structure run the command "gcc -o standalone_server standalone_server.c cJSON.c -lm" to compile the program
-4. do the same with standalone_server or compdetect_client & compdetect_server.c (depending on which you plan to run)
-5. In order to run the program you must write "./<application name> <port number> for server applications and ./<application name> <config file> for client side applications (adding a sudo before for the stand alone version) Ex. sudo ./standalone config.json
+3. Then make sure you replace the value for "ClientIPAddress with your desired client IP address in config.json
+4. Once you have the correct file structure run the command "gcc -o standalone_server standalone_server.c cJSON.c -lm" to compile the program
+5. do the same with standalone_server or compdetect_client & compdetect_server.c (depending on which you plan to run)
+6. In order to run the client server program do the following "./compdetect_server 7777" and then "./compdetect_client config.json" (replacing 7777 with the desired port number)
+7. In order to run the standalone version do the following "./standalone_server 7777" and then "sudo ./standalone config.json"(replacing 7777 with the desired port number)
 
 
 ## Incomplete Features
